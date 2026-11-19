@@ -80,13 +80,13 @@ function parseArgs(argv: string[]): PurchaseArgsParsed {
   return out;
 }
 
-/** Resolve Stellar network: --network > STELLAR_NETWORK > mainnet default. */
+/** Resolve Stellar network: --network > STELLAR_NETWORK > testnet default. */
 function resolveNetworkPassphrase(args: PurchaseArgs): string {
   const fromEnv =
     process.env.STELLAR_NETWORK === 'testnet' || process.env.STELLAR_NETWORK === 'mainnet'
       ? process.env.STELLAR_NETWORK
       : undefined;
-  const network = args.network || fromEnv || 'mainnet';
+  const network = args.network || fromEnv || 'testnet';
   return network === 'testnet' ? Networks.TESTNET : Networks.PUBLIC;
 }
 
@@ -111,7 +111,7 @@ Options:
                              call time and never logged.
   --resume <order-id>        Resume a purchase that failed mid-flight. Omit --amount.
   --network testnet|mainnet  Stellar network for the wallet payment. Default:
-                             STELLAR_NETWORK env, else mainnet. Must match where
+                             STELLAR_NETWORK env, else testnet. Must match where
                              the agent wallet was funded (local backends usually
                              use testnet).
   -h, --help                 Show this message
