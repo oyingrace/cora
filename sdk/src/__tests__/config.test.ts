@@ -217,7 +217,7 @@ describe('assertSafeBaseUrl — protocol check', () => {
 
   it('allows http://localhost without the override env', () => {
     delete process.env.CORA_ALLOW_INSECURE_BASE_URL;
-    expect(assertSafeBaseUrl('http://localhost:4000/v1')).toMatch(/^http:\/\/localhost/);
+    expect(assertSafeBaseUrl('http://localhost:4200/v1')).toMatch(/^http:\/\/localhost/);
   });
 
   it('allows http://127.0.0.1 without the override env', () => {

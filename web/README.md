@@ -17,7 +17,7 @@ npm run lint              # ESLint (run from monorepo root)
 | -------------------------- | --------------- | ----------------------------------------------------- |
 | `NEXT_PUBLIC_API_BASE_URL` | Production only | Backend API base URL, e.g. `http://127.0.0.1:4200` |
 
-In development the dashboard defaults to `http://localhost:4000` for its API base.
+In development the dashboard defaults to `http://localhost:4200` for its API base.
 
 ## Structure
 

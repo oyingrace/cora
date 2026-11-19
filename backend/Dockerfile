@@ -15,7 +15,7 @@ COPY src ./src
 
 # ---- runner ----
 FROM node:20-bookworm-slim AS runner
-ENV NODE_ENV=production PORT=4000
+ENV NODE_ENV=production PORT=4200
 WORKDIR /app
 COPY --from=builder --chown=node:node /app /app
 # SQLite data dir — owned by the non-root runtime user; mounted as a volume

@@ -278,7 +278,7 @@ describe('F4-env: http(s)-only URL fields', () => {
   it('accepts http:// CORA_BASE_URL (dev mode)', () => {
     const r = _EnvSchema.safeParse({
       ...baseEnv(),
-      CORA_BASE_URL: 'http://localhost:4000',
+      CORA_BASE_URL: 'http://localhost:4200',
     });
     assert.equal(r.success, true);
   });

@@ -18,7 +18,7 @@ const {
 } = require('@stellar/stellar-sdk');
 
 const AMOUNT = process.argv[2] || '0.02';
-const CORA_BASE = `http://localhost:${process.env.PORT || 4000}`;
+const CORA_BASE = `http://localhost:${process.env.PORT || 4200}`;
 const SOROBAN_RPC_URL = process.env.SOROBAN_RPC_URL || 'https://mainnet.sorobanrpc.com';
 const RECEIVER_CONTRACT_ID = process.env.RECEIVER_CONTRACT_ID;
 const NETWORK = process.env.STELLAR_NETWORK || 'mainnet';

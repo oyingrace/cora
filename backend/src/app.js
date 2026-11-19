@@ -442,7 +442,7 @@ app.post('/v1/agent/claim', claimLimiter, (req, res) => {
   });
 
   // Prefer PUBLIC_API_BASE_URL when set (explicit /v1 endpoint). Otherwise
-  // derive from CORA_BASE_URL so local dev (http://localhost:4000) and
+  // derive from CORA_BASE_URL so local dev (http://localhost:4200) and
   // production share one env var instead of silently falling back to
   // http://127.0.0.1:4200/v1 and failing the CLI origin check.
   const publicApiBase = process.env.PUBLIC_API_BASE_URL;

@@ -22,7 +22,7 @@
  *
  * Then in backend/.env:
  *   VCC_API_BASE=http://127.0.0.1:4300
- *   CORA_BASE_URL=http://localhost:4000
+ *   CORA_BASE_URL=http://localhost:4200
  *
  * Restart the backend after changing VCC_API_BASE (captured at module load).
  */
