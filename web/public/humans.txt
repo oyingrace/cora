@@ -1,0 +1,9 @@
+/* TEAM */
+Cora is built for AI-agent financial infrastructure on Stellar.
+
+Contact: hello@cora.dev
+Security: security@cora.dev
+
+/* SITE */
+Standards: HTML5, CSS3, Next.js
+Network: Stellar testnet (default)

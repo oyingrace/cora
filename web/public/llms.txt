@@ -1,0 +1,27 @@
+# Cora
+
+> The financial operating system for AI agents.
+> Wallets, spend controls, and virtual Visa cards on Stellar + Soroban.
+
+Cora lets AI agents pay USDC or XLM on Stellar and receive a virtual Visa card
+(PAN, CVV, expiry) in about a minute. Operators manage agents from a dashboard
+with budgets, approvals, and audit logs.
+
+Default network during development: **Stellar testnet**.
+
+## Integration surfaces
+
+- HTTP API (`/v1`)
+- TypeScript SDK + CLI (`npx cora`)
+- MCP (planned — not enabled in this build)
+
+## Quick path
+
+1. Operator creates an agent + claim code in the dashboard
+2. Agent runs `npx cora onboard --claim cora_<code> --network testnet --api-base http://127.0.0.1:4200/v1`
+3. Agent purchases with `npx cora purchase --amount 25 --network testnet`
+
+## Docs
+
+- Project description: /docs/project-description.md (repo)
+- Agent guide: /AGENTS.md (repo)

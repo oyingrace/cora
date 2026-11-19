@@ -1,0 +1,42 @@
+{
+  "name": "cora-backend",
+  "version": "0.1.0",
+  "description": "Cora backend — USDC/XLM to VCC fulfillment on Stellar testnet",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch --env-file=.env src/index.js",
+    "mock:vcc": "node ../scripts/mock-vcc.mjs",
+    "lint": "eslint src/",
+    "typecheck": "tsc --project jsconfig.json",
+    "test": "node --test test/unit/*.test.js test/integration/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.85.0",
+    "@stellar/stellar-sdk": "^17.4.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.10.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.3.2",
+    "helmet": "^8.2.0",
+    "nodemailer": "^8.0.5",
+    "uuid": "^11.0.5",
+    "zod": "^3.25.76"
+  },
+  "overrides": {
+    "axios": "^1.16.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "@types/nodemailer": "^8.0.0",
+    "@types/uuid": "^10.0.0",
+    "supertest": "^7.2.2",
+    "typescript": "^6.0.2"
+  }
+}

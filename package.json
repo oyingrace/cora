@@ -1,0 +1,38 @@
+{
+  "name": "cora-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "web",
+    "sdk"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "dev:web": "npm run dev -w web -- -p 3200",
+    "dev:api": "npm run dev --prefix backend",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck -w web --if-present && npm run typecheck -w sdk --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build -w sdk && npm run build -w web",
+    "mock:vcc": "node scripts/mock-vcc.mjs",
+    "verify": "./scripts/verify.sh"
+  },
+  "overrides": {
+    "axios": "^1.15.0",
+    "postcss": "^8.5.10"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^15.0.0",
+    "prettier": "^3.8.3",
+    "typescript-eslint": "^8.59.0"
+  }
+}
