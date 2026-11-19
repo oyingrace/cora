@@ -13,7 +13,7 @@ const USDC_ISSUER_DEFAULT = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K
  * Return the /v1/.well-known/mpp discovery document.
  */
 function buildDiscoveryDoc() {
-  const network = process.env.STELLAR_NETWORK || 'mainnet';
+  const network = process.env.STELLAR_NETWORK || 'testnet';
   const contractId = process.env.RECEIVER_CONTRACT_ID || '';
   const usdcIssuer = process.env.STELLAR_USDC_ISSUER || USDC_ISSUER_DEFAULT;
   return {

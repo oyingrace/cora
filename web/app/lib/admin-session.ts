@@ -96,7 +96,7 @@ export function getBackendBaseUrl(): string {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('CORA_BACKEND_URL (or NEXT_PUBLIC_API_BASE_URL) is required');
     }
-    return 'http://localhost:4000';
+    return 'http://localhost:4200';
   }
   return url.replace(/\/$/, '');
 }

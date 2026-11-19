@@ -63,7 +63,7 @@ async function fetchTreasuryBalance() {
     return { public_key: null, xlm: null, usdc: null, error: 'STELLAR_XLM_SECRET not set' };
   const publicKey = Keypair.fromSecret(secret).publicKey();
   const horizon =
-    (process.env.STELLAR_NETWORK || 'mainnet') === 'mainnet'
+    (process.env.STELLAR_NETWORK || 'testnet') === 'mainnet'
       ? 'https://horizon.stellar.org'
       : 'https://horizon-testnet.stellar.org';
   try {
@@ -388,7 +388,7 @@ router.get('/treasury', async (req, res) => {
   const outflows = /** @type {any[]} */ ([]);
   if (balance.public_key) {
     const horizon =
-      (process.env.STELLAR_NETWORK || 'mainnet') === 'mainnet'
+      (process.env.STELLAR_NETWORK || 'testnet') === 'mainnet'
         ? 'https://horizon.stellar.org'
         : 'https://horizon-testnet.stellar.org';
     try {

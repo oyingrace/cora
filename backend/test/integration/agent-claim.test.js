@@ -66,7 +66,7 @@ describe('POST /v1/agent/claim — happy path', () => {
   beforeEach(() => resetDb());
 
   it('returns api_key + webhook_secret for a valid code', async () => {
-    const code = 'c402_happy_path_0123456789abcdef';
+    const code = 'cora_happy_path_0123456789abcdef';
     const { apiKeyId } = await seedClaim({
       code,
       sealedPayload: passthroughSealed({
@@ -84,7 +84,7 @@ describe('POST /v1/agent/claim — happy path', () => {
   });
 
   it('marks the claim used and wipes sealed_payload after a successful redeem', async () => {
-    const code = 'c402_wipe_payload_0123456789abcdef';
+    const code = 'cora_wipe_payload_0123456789abcdef';
     const { claimId } = await seedClaim({
       code,
       sealedPayload: passthroughSealed({ api_key: 'cora_x', webhook_secret: 'whsec_x' }),
@@ -105,13 +105,13 @@ describe('POST /v1/agent/claim — rejection buckets', () => {
   beforeEach(() => resetDb());
 
   it('rejects a completely unknown code with 401 invalid_claim', async () => {
-    const res = await request.post('/v1/agent/claim').send({ code: 'c402_does_not_exist' });
+    const res = await request.post('/v1/agent/claim').send({ code: 'cora_does_not_exist' });
     assert.equal(res.status, 401);
     assert.equal(res.body.error, 'invalid_claim');
   });
 
   it('rejects an expired code with 401 invalid_claim (same generic error)', async () => {
-    const code = 'c402_expired_0123456789abcdef';
+    const code = 'cora_expired_0123456789abcdef';
     await seedClaim({
       code,
       sealedPayload: passthroughSealed({ api_key: 'x', webhook_secret: 'x' }),
@@ -123,7 +123,7 @@ describe('POST /v1/agent/claim — rejection buckets', () => {
   });
 
   it('rejects a second redemption with 401 invalid_claim', async () => {
-    const code = 'c402_single_use_0123456789abcdef';
+    const code = 'cora_single_use_0123456789abcdef';
     await seedClaim({
       code,
       sealedPayload: passthroughSealed({ api_key: 'x', webhook_secret: 'x' }),
@@ -142,7 +142,7 @@ describe('POST /v1/agent/claim — rejection buckets', () => {
   });
 
   it('rejects non-string code with 400 missing_code', async () => {
-    const res = await request.post('/v1/agent/claim').send({ code: ['c402_x'] });
+    const res = await request.post('/v1/agent/claim').send({ code: ['cora_x'] });
     assert.equal(res.status, 400);
     assert.equal(res.body.error, 'missing_code');
   });
@@ -166,7 +166,7 @@ describe('POST /v1/agent/claim — F1 decrypt failure rollback', () => {
   beforeEach(() => resetDb());
 
   it('returns 500 claim_decrypt_failed on malformed sealed_payload', async () => {
-    const code = 'c402_decrypt_fail_0123456789abcdef';
+    const code = 'cora_decrypt_fail_0123456789abcdef';
     // A blob starting with `enc:` forces secret-box.open() into the
     // decrypt path. In test env CORA_SECRET_BOX_KEY is unset so
     // open() throws 'CORA_SECRET_BOX_KEY not set, cannot decrypt'.
@@ -180,7 +180,7 @@ describe('POST /v1/agent/claim — F1 decrypt failure rollback', () => {
   });
 
   it('F2: the decrypt-failed response does NOT leak the env var name', async () => {
-    const code = 'c402_f2_no_leak_0123456789abcdef';
+    const code = 'cora_f2_no_leak_0123456789abcdef';
     await seedClaim({ code, sealedPayload: 'enc:aa:bb:cc' });
 
     const res = await request.post('/v1/agent/claim').send({ code });
@@ -198,7 +198,7 @@ describe('POST /v1/agent/claim — F1 decrypt failure rollback', () => {
   });
 
   it('does NOT mark the claim used when decryption fails — retry stays valid (F1)', async () => {
-    const code = 'c402_retry_works_0123456789abcdef';
+    const code = 'cora_retry_works_0123456789abcdef';
     const { claimId } = await seedClaim({
       code,
       // First seed with a malformed blob — this triggers the rollback

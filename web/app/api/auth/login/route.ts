@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     headers: {
       'Content-Type': 'application/json',
       // The backend enforces HTTPS via x-forwarded-proto; our upstream
-      // fetch is plain HTTP (localhost:4000), so set it explicitly so
+      // fetch is plain HTTP (localhost:4200), so set it explicitly so
       // the backend sees the request as originating over TLS.
       'X-Forwarded-Proto': 'https',
     },

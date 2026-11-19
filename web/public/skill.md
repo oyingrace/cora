@@ -19,11 +19,11 @@ They work anywhere Visa is accepted, subject to the issuer's limits
 ## Before you can use it
 
 The operator who gave you this document will also give you a **claim code**.
-It looks like `c402_abc123def456…` and is single-use. To exchange the claim
+It looks like `cora_abc123def456…` and is single-use. To exchange the claim
 for a usable API key, run:
 
 ```bash
-npx -y cora@latest onboard --claim c402_<code>
+npx -y cora@latest onboard --claim cora_<code>
 ```
 
 > **Always pin `@latest`.** The `@latest` flag forces `npx` to re-resolve

@@ -8,105 +8,99 @@
    without a flash of wrong colors. */
 
 :root {
-  /* ── Canvas + ink ─────────────────────────────────────────────────── */
-  --bg: #050505;
-  --bg-elev: #0c0c0c;
-  --bg-elev-2: #111111;
-  --fg: #f4f4f4;
-  --fg-muted: rgba(255, 255, 255, 0.66);
-  --fg-dim: rgba(255, 255, 255, 0.44);
-  --muted: rgba(255, 255, 255, 0.44);
+  /* Cora — Apple-inspired light system (design/skill.md).
+     Variable NAMES preserved for dashboard compatibility. */
 
-  /* ── Surfaces ─────────────────────────────────────────────────────── */
-  --surface: #0c0c0c;
-  --surface-2: #141414;
-  --surface-3: #1a1a1a;
-  --surface-hover: rgba(255, 255, 255, 0.04);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --border-hairline: rgba(255, 255, 255, 0.05);
+  --bg: #f5f5f7;
+  --bg-elev: rgba(255, 255, 255, 0.72);
+  --bg-elev-2: #ffffff;
+  --fg: #1d1d1f;
+  --fg-muted: rgba(29, 29, 31, 0.72);
+  --fg-dim: rgba(29, 29, 31, 0.48);
+  --muted: rgba(29, 29, 31, 0.48);
 
-  /* ── Accents ──────────────────────────────────────────────────────── */
-  /* Single live/success green. Slightly muted from the old neon so it
-     reads as engineering-grade rather than cyberpunk. */
-  --green: #7cffb2;
-  --green-dim: #4fd894;
-  --green-muted: rgba(124, 255, 178, 0.1);
-  --green-border: rgba(124, 255, 178, 0.26);
-  --green-glow: rgba(124, 255, 178, 0.35);
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-2: #ffffff;
+  --surface-3: #e8e8ed;
+  --surface-hover: rgba(29, 29, 31, 0.04);
+  --border: rgba(29, 29, 31, 0.1);
+  --border-strong: rgba(29, 29, 31, 0.18);
+  --border-hairline: rgba(29, 29, 31, 0.06);
 
-  --red: #ff7a7a;
-  --red-muted: rgba(255, 122, 122, 0.12);
-  --red-border: rgba(255, 122, 122, 0.26);
-  --yellow: #ffd166;
-  --yellow-muted: rgba(255, 209, 102, 0.12);
-  --yellow-border: rgba(255, 209, 102, 0.26);
-  --blue: #8ab4ff;
-  --blue-muted: rgba(138, 180, 255, 0.12);
-  --blue-border: rgba(138, 180, 255, 0.26);
-  --purple: #c8a8ff;
-  --purple-muted: rgba(200, 168, 255, 0.12);
-  --purple-border: rgba(200, 168, 255, 0.26);
+  --green: #248a3d;
+  --green-dim: #1b6b30;
+  --green-muted: rgba(36, 138, 61, 0.1);
+  --green-border: rgba(36, 138, 61, 0.28);
+  --green-glow: rgba(36, 138, 61, 0.18);
 
-  /* ── Shadow + glow ────────────────────────────────────────────────── */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
-  --shadow-hero: 0 40px 120px -40px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --shadow-float: 0 20px 48px -24px rgba(0, 0, 0, 0.85);
+  --red: #d70015;
+  --red-muted: rgba(215, 0, 21, 0.08);
+  --red-border: rgba(215, 0, 21, 0.22);
+  --yellow: #b25000;
+  --yellow-muted: rgba(178, 80, 0, 0.08);
+  --yellow-border: rgba(178, 80, 0, 0.22);
+  --blue: #0071e3;
+  --blue-muted: rgba(0, 113, 227, 0.1);
+  --blue-border: rgba(0, 113, 227, 0.28);
+  --purple: #0071e3; /* aliased away from purple bias */
+  --purple-muted: rgba(0, 113, 227, 0.1);
+  --purple-border: rgba(0, 113, 227, 0.28);
 
-  /* ── Typography tokens ────────────────────────────────────────────── */
-  /* next/font sets --font-display, --font-body, --font-mono-next on
-     <html>. We alias the old --font-mono here so the dashboard keeps
-     working without touching component code. */
-  --font-display: 'Fraunces', 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
-  --font-body:
-    'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: var(--font-mono-next, 'IBM Plex Mono'), 'JetBrains Mono', ui-monospace, monospace;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-hero: 0 24px 80px -32px rgba(0, 0, 0, 0.18);
+  --shadow-float: 0 16px 40px -20px rgba(0, 0, 0, 0.16);
 
-  /* ── Motion ───────────────────────────────────────────────────────── */
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui,
+    sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.18, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --material-blur: blur(20px) saturate(180%);
 }
 
-html[data-theme='light'] {
-  --bg: #fafaf7;
-  --bg-elev: #ffffff;
-  --bg-elev-2: #f2f1ec;
-  --fg: #0a0a0a;
-  --fg-muted: rgba(10, 10, 10, 0.68);
-  --fg-dim: rgba(10, 10, 10, 0.46);
-  --muted: rgba(10, 10, 10, 0.5);
+html[data-theme='dark'] {
+  --bg: #000000;
+  --bg-elev: rgba(28, 28, 30, 0.72);
+  --bg-elev-2: #1c1c1e;
+  --fg: #f5f5f7;
+  --fg-muted: rgba(245, 245, 247, 0.72);
+  --fg-dim: rgba(245, 245, 247, 0.48);
+  --muted: rgba(245, 245, 247, 0.48);
 
-  --surface: #ffffff;
-  --surface-2: #f4f3ef;
-  --surface-3: #eceae3;
-  --surface-hover: rgba(10, 10, 10, 0.03);
-  --border: rgba(10, 10, 10, 0.09);
-  --border-strong: rgba(10, 10, 10, 0.16);
-  --border-hairline: rgba(10, 10, 10, 0.05);
+  --surface: rgba(28, 28, 30, 0.72);
+  --surface-2: #1c1c1e;
+  --surface-3: #2c2c2e;
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --border-hairline: rgba(255, 255, 255, 0.08);
 
-  --green: #059669;
-  --green-dim: #047857;
-  --green-muted: rgba(5, 150, 105, 0.1);
-  --green-border: rgba(5, 150, 105, 0.26);
-  --green-glow: rgba(5, 150, 105, 0.18);
+  --green: #30d158;
+  --green-dim: #248a3d;
+  --green-muted: rgba(48, 209, 88, 0.12);
+  --green-border: rgba(48, 209, 88, 0.28);
+  --green-glow: rgba(48, 209, 88, 0.2);
 
-  --red: #dc2626;
-  --red-muted: rgba(220, 38, 38, 0.08);
-  --red-border: rgba(220, 38, 38, 0.22);
-  --yellow: #d97706;
-  --yellow-muted: rgba(217, 119, 6, 0.08);
-  --yellow-border: rgba(217, 119, 6, 0.22);
-  --blue: #2563eb;
-  --blue-muted: rgba(37, 99, 235, 0.08);
-  --blue-border: rgba(37, 99, 235, 0.22);
-  --purple: #7c3aed;
-  --purple-muted: rgba(124, 58, 237, 0.08);
-  --purple-border: rgba(124, 58, 237, 0.22);
+  --red: #ff453a;
+  --red-muted: rgba(255, 69, 58, 0.12);
+  --red-border: rgba(255, 69, 58, 0.28);
+  --yellow: #ffd60a;
+  --yellow-muted: rgba(255, 214, 10, 0.12);
+  --yellow-border: rgba(255, 214, 10, 0.28);
+  --blue: #0a84ff;
+  --blue-muted: rgba(10, 132, 255, 0.12);
+  --blue-border: rgba(10, 132, 255, 0.28);
+  --purple: #0a84ff;
+  --purple-muted: rgba(10, 132, 255, 0.12);
+  --purple-border: rgba(10, 132, 255, 0.28);
 
-  --shadow-card: 0 1px 2px rgba(10, 10, 10, 0.06), 0 0 0 1px rgba(10, 10, 10, 0.03);
-  --shadow-hero: 0 40px 120px -40px rgba(10, 10, 10, 0.22), 0 0 0 1px rgba(10, 10, 10, 0.06);
-  --shadow-float: 0 20px 48px -24px rgba(10, 10, 10, 0.2);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-hero: 0 24px 80px -32px rgba(0, 0, 0, 0.55);
+  --shadow-float: 0 16px 40px -20px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {

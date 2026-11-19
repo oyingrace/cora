@@ -133,7 +133,7 @@ const EnvSchema = z
     PORT: z
       .string()
       .regex(/^\d+$/, 'PORT must be a positive integer (e.g. "4000")')
-      .default('4000'),
+      .default('4200'),
     // NODE_ENV is REQUIRED — no default. A missing NODE_ENV in
     // production silently runs in dev mode, which skips the
     // CORA_SECRET_BOX_KEY refinement below and lets the claim
@@ -157,7 +157,7 @@ const EnvSchema = z
     // F1-env: full Stellar StrKey format validated (56 base32 chars,
     // not just first-char check). A typo like 'S' or 'Gbadkey' fails
     // at boot instead of at first xlm-sender call.
-    STELLAR_NETWORK: z.enum(['mainnet', 'testnet']).default('mainnet'),
+    STELLAR_NETWORK: z.enum(['mainnet', 'testnet']).default('testnet'),
     STELLAR_USDC_ISSUER: stellarStrkey('G', 'STELLAR_USDC_ISSUER').default(
       'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
     ),

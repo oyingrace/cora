@@ -66,7 +66,7 @@ async function main() {
   const testToken = `cora_${crypto.randomBytes(24).toString('hex')}`;
   const keyHash = await bcrypt.hash(testToken, 10);
   const keyId = crypto.randomUUID();
-  const keyPrefix = testToken.slice(9, 21);
+  const keyPrefix = testToken.slice(5, 17);
   db.prepare(
     `
     INSERT INTO api_keys (id, key_hash, key_prefix, label, mode, enabled)

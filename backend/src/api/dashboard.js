@@ -236,7 +236,7 @@ router.get('/', (req, res) => {
     spend_limit_usdc: d.spend_limit_usdc,
     frozen: d.frozen === 1,
     created_at: d.created_at,
-    network: process.env.STELLAR_NETWORK || 'mainnet',
+    network: process.env.STELLAR_NETWORK || 'testnet',
     stats: { ...stats, active_keys: activeKeys, pending_approvals: pendingApprovals },
   });
 });
@@ -536,7 +536,7 @@ router.post('/api-keys', requirePermission('agent:create'), async (req, res) => 
 
   const id = uuidv4();
   const rawKey = `cora_${crypto.randomBytes(24).toString('hex')}`;
-  const keyPrefix = rawKey.slice(9, 21);
+  const keyPrefix = rawKey.slice(5, 17); // after `cora_`
   const keyHash = await bcrypt.hash(rawKey, 10);
   const webhookSecret = `whsec_${crypto.randomBytes(32).toString('hex')}`;
 
@@ -576,7 +576,7 @@ router.post('/api-keys', requirePermission('agent:create'), async (req, res) => 
   // constraint still works because both sides hash identically.
   const { hashClaimCode } = require('../lib/claim-hash');
   const claimId = uuidv4();
-  const claimCode = `c402_${crypto.randomBytes(24).toString('hex')}`;
+  const claimCode = `cora_${crypto.randomBytes(24).toString('hex')}`;
   const claimTtlMs = 10 * 60 * 1000; // 10 min — long enough to paste + run, short enough to matter
   const claimExpiresAt = new Date(Date.now() + claimTtlMs).toISOString();
   const secretBox = require('../lib/secret-box');
@@ -1356,7 +1356,7 @@ router.get('/platform-wallet', requirePlatformOwner, (req, res) => {
     const keypair = Keypair.fromSecret(secret);
     res.json({
       public_key: keypair.publicKey(),
-      network: process.env.STELLAR_NETWORK || 'mainnet',
+      network: process.env.STELLAR_NETWORK || 'testnet',
     });
   } catch (err) {
     res.status(500).json({

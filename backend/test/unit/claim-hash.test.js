@@ -23,30 +23,30 @@ const { hashClaimCode } = require('../../src/lib/claim-hash');
 
 describe('hashClaimCode — baseline', () => {
   it('returns a 64-char lowercase hex string', () => {
-    const h = hashClaimCode('c402_abcdef1234567890');
+    const h = hashClaimCode('cora_abcdef1234567890');
     assert.match(h, /^[0-9a-f]{64}$/);
   });
 
   it('is deterministic for the same input', () => {
-    const a = hashClaimCode('c402_abc');
-    const b = hashClaimCode('c402_abc');
+    const a = hashClaimCode('cora_abc');
+    const b = hashClaimCode('cora_abc');
     assert.equal(a, b);
   });
 
   it('produces distinct hashes for distinct inputs', () => {
-    const a = hashClaimCode('c402_abc');
-    const b = hashClaimCode('c402_abd');
+    const a = hashClaimCode('cora_abc');
+    const b = hashClaimCode('cora_abd');
     assert.notEqual(a, b);
   });
 
   it('matches a direct crypto.createHash computation', () => {
-    const code = 'c402_' + 'f'.repeat(48);
+    const code = 'cora_' + 'f'.repeat(48);
     const expected = crypto.createHash('sha256').update(code).digest('hex');
     assert.equal(hashClaimCode(code), expected);
   });
 
   it('accepts a realistic mint-side claim code (regression guard)', () => {
-    const code = `c402_${crypto.randomBytes(24).toString('hex')}`;
+    const code = `cora_${crypto.randomBytes(24).toString('hex')}`;
     const h = hashClaimCode(code);
     assert.equal(h.length, 64);
   });
@@ -75,7 +75,7 @@ describe('F1-claim-hash: non-string input rejection', () => {
     // Buffers are objects, not strings — pre-fix `String(buf)` would have
     // decoded to UTF-8 and produced a hash.
     assert.throws(
-      () => hashClaimCode(/** @type {any} */ (Buffer.from('c402_abc'))),
+      () => hashClaimCode(/** @type {any} */ (Buffer.from('cora_abc'))),
       /must be a string/,
     );
   });

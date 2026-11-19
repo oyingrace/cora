@@ -6,7 +6,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3200',
     trace: 'on-first-retry',
   },
   projects: [
@@ -18,8 +18,8 @@ export default defineConfig({
   // Start Next.js dev server before running tests.
   // The backend is mocked via page.route() — no backend process needed.
   webServer: {
-    command: 'npm run dev -- --port 3000',
-    url: 'http://localhost:3000',
+    command: 'npm run dev -- --port 3200',
+    url: 'http://localhost:3200',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

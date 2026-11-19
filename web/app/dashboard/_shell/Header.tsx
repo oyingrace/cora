@@ -95,7 +95,7 @@ export function Header() {
           see "Frozen" when the fulfillment circuit breaker trips. */}
       <div
         className="dashboard-header-live"
-        title={systemHealthy ? (isPlatformOwner ? 'Live — mainnet' : 'Live') : 'Fulfillment frozen'}
+        title={systemHealthy ? (isPlatformOwner ? 'Live — testnet' : 'Live') : 'Fulfillment frozen'}
         style={{
           display: 'flex',
           alignItems: 'center',

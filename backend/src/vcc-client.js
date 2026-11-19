@@ -274,7 +274,7 @@ async function getInvoice(orderId, amountUsdc, requestId = null, callbackNonce =
   const token = await getVccToken();
 
   const callbackBase =
-    process.env.CORA_BASE_URL || `http://localhost:${process.env.PORT || 4000}`;
+    process.env.CORA_BASE_URL || `http://localhost:${process.env.PORT || 4200}`;
   const callbackUrl = `${callbackBase}/vcc-callback`;
 
   // Audit F2: per-order callback secret. The historical model used a single

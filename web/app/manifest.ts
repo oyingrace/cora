@@ -4,11 +4,12 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Cora',
     short_name: 'Cora',
-    description: 'Virtual Visa cards, issued to AI agents. Pay in USDC or XLM on Stellar.',
+    description:
+      'The financial operating system for AI agents — wallets, spend controls, and virtual Visa cards on Stellar.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#050505',
-    theme_color: '#050505',
+    background_color: '#f5f5f7',
+    theme_color: '#f5f5f7',
     icons: [
       {
         src: '/icon.png',

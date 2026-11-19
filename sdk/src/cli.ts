@@ -14,7 +14,9 @@
 // handlers (~500 lines of tool registration) and vice versa.
 
 async function main(): Promise<number> {
-  const [, , cmd = 'mcp', ...rest] = process.argv;
+  // Default to help until MCP (Phase 10) is enabled — avoid booting a stub
+  // server when operators run bare `npx cora`.
+  const [, , cmd = 'help', ...rest] = process.argv;
 
   // Fire-and-forget update check. Runs in parallel with the command;
   // warns on stderr if this install is older than the latest on npm.

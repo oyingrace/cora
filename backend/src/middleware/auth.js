@@ -1,16 +1,19 @@
 // @ts-check
 // Shared API key authentication middleware for /v1 routes.
 // Uses key_prefix for O(1) candidate lookup, then bcrypt for verification.
-// Key format: cora_<48 random hex chars>; key_prefix = chars 9-21 of the key.
+// Key format: cora_<48 random hex chars>; key_prefix = chars 5-17 of the key.
 
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 
-// cora_<48 hex> → 9 + 48 = 57 chars exactly. We allow the header
-// to be slightly shorter (down to 21 chars = prefix region) so
+const KEY_PREFIX_TAG = 'cora_'; // length 5
+const KEY_PREFIX_LEN = 12;
+
+// cora_<48 hex> → 5 + 48 = 53 chars exactly. We allow the header
+// to be slightly shorter (down to 17 chars = prefix region) so
 // obviously-truncated keys still route through the prefix index rather
 // than falling back to a full-table bcrypt scan (a DoS amplifier pre-F).
-const KEY_MIN_LENGTH = 21; // cora_ (9) + 12-char prefix
+const KEY_MIN_LENGTH = KEY_PREFIX_TAG.length + KEY_PREFIX_LEN; // 17
 const KEY_MAX_LENGTH = 128; // anything longer is either wrong or hostile
 
 // Cap on candidate rows per auth attempt. The prefix is 12 hex chars =
@@ -38,7 +41,7 @@ try {
     console.warn(
       `[auth] ${legacyCount} legacy api_keys rows have NULL key_prefix — ` +
         `these participate in every auth attempt via the fallback query. ` +
-        `Migrate them by setting key_prefix = substr(key, 10, 12) after verifying the raw key, ` +
+        `Migrate them by setting key_prefix = substr(key, 6, 12) after verifying the raw key, ` +
         `or retire the rows if they're no longer valid.`,
     );
   }
@@ -62,7 +65,7 @@ module.exports = async function auth(req, res, next) {
   if (!key.startsWith('cora_') || key.length < KEY_MIN_LENGTH || key.length > KEY_MAX_LENGTH) {
     return res.status(401).json({ error: 'invalid_api_key' });
   }
-  const keyPrefix = key.slice(9, 21);
+  const keyPrefix = key.slice(KEY_PREFIX_TAG.length, KEY_PREFIX_TAG.length + KEY_PREFIX_LEN);
 
   // Use the prefix index to narrow candidates. The `key_prefix IS NULL`
   // fallback catches any legacy rows created before the column existed

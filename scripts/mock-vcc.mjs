@@ -18,10 +18,10 @@
  *   node scripts/mock-vcc.mjs
  *
  *   # or explicit destination / ports
- *   MOCK_VCC_DESTINATION=G... MOCK_VCC_PORT=4100 node scripts/mock-vcc.mjs
+ *   MOCK_VCC_DESTINATION=G... MOCK_VCC_PORT=4300 node scripts/mock-vcc.mjs
  *
  * Then in backend/.env:
- *   VCC_API_BASE=http://127.0.0.1:4100
+ *   VCC_API_BASE=http://127.0.0.1:4300
  *   CORA_BASE_URL=http://localhost:4000
  *
  * Restart the backend after changing VCC_API_BASE (captured at module load).
@@ -59,7 +59,7 @@ function loadDotEnv(filePath) {
 }
 loadDotEnv(BACKEND_ENV);
 
-const PORT = Number(process.env.MOCK_VCC_PORT || 4100);
+const PORT = Number(process.env.MOCK_VCC_PORT || 4300);
 const CALLBACK_DELAY_MS = Number(process.env.MOCK_VCC_CALLBACK_DELAY_MS || 400);
 /** Invoice XLM the treasury will "pay CTX". Keep small on testnet. */
 const INVOICE_XLM = process.env.MOCK_VCC_INVOICE_XLM || '0.5';

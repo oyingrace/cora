@@ -12,7 +12,7 @@ startJobs();
 
 const stopWatcher = startWatcher(handlePayment);
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4200;
 const server = app.listen(PORT, () => {
   console.log(
     `[cora] backend running on port ${PORT} (${process.env.NODE_ENV || 'development'})`,

@@ -13,7 +13,7 @@ const { event: bizEvent } = require('../lib/logger');
 const db = require('../db');
 const { parsePaymentEvent } = require('./parse-payment-event');
 
-const NETWORK = process.env.STELLAR_NETWORK || 'mainnet';
+const NETWORK = process.env.STELLAR_NETWORK || 'testnet';
 const SOROBAN_RPC_URL =
   process.env.SOROBAN_RPC_URL ||
   (NETWORK === 'mainnet'

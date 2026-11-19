@@ -32,7 +32,7 @@ async function createTestKey({
   // Match production: src/api/dashboard.js:332 stores chars 9-21 as the
   // prefix index so the auth middleware's O(1) lookup path fires in tests
   // instead of falling back to the legacy NULL-prefix scan.
-  const keyPrefix = rawKey.slice(9, 21);
+  const keyPrefix = rawKey.slice(5, 17);
 
   db.prepare(
     `
