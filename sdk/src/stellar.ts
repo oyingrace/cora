@@ -74,7 +74,7 @@ export async function getBalance(
 
 export async function addUsdcTrustline(
   secret: string,
-  networkPassphrase = Networks.PUBLIC,
+  networkPassphrase = Networks.TESTNET,
 ): Promise<string> {
   const server = getServer(networkPassphrase);
   const keypair = Keypair.fromSecret(secret);
@@ -109,7 +109,7 @@ export async function payViaContract(opts: PayOpts): Promise<string> {
     walletSecret,
     payment,
     paymentAsset = 'usdc',
-    networkPassphrase = Networks.PUBLIC,
+    networkPassphrase = Networks.TESTNET,
     sorobanRpcUrl,
   } = opts;
 

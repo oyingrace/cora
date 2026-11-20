@@ -120,8 +120,7 @@ export default function TermsPage() {
               <>
                 <p>
                   Cora sells cards at face value — you pay exactly the stated USD amount in USDC
-                  or the quoted XLM equivalent. No service fee, no markup, no hidden spread. See the{' '}
-                  <Link href="/pricing">Pricing</Link> page for details.
+                  or the quoted XLM equivalent. No service fee, no markup, no hidden spread.
                 </p>
                 <p>
                   If an order fails before the card is issued (for example, because the fulfilment
@@ -238,7 +237,7 @@ export default function TermsPage() {
                 <p>
                   We may update these terms. Material changes (anything affecting acceptable use,
                   pricing, liability, or termination) are announced at least 30 days before they
-                  take effect via email and the <Link href="/changelog">Changelog</Link>.
+                  take effect via email.
                 </p>
                 <p>
                   If you don&apos;t agree to a change, you can terminate your account before the

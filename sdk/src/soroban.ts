@@ -21,8 +21,9 @@ const TESTNET_RPC = 'https://soroban-testnet.stellar.org';
 const MAINNET_HORIZON = 'https://horizon.stellar.org';
 const TESTNET_HORIZON = 'https://horizon-testnet.stellar.org';
 
-export function getSorobanRpcUrl(networkPassphrase: string): string {
-  return networkPassphrase === Networks.TESTNET ? TESTNET_RPC : MAINNET_RPC;
+export function getSorobanRpcUrl(networkPassphrase?: string): string {
+  if (!networkPassphrase || networkPassphrase === Networks.TESTNET) return TESTNET_RPC;
+  return MAINNET_RPC;
 }
 
 // F3-soroban (2026-04-16): network-aware Horizon URL. Pre-fix, every
@@ -31,7 +32,9 @@ export function getSorobanRpcUrl(networkPassphrase: string): string {
 // which the SDK interpreted as "tx never applied" with `dropped: true`
 // — triggering the retry loop and risking a double-payment.
 export function getHorizonUrl(networkPassphrase?: string): string {
-  return networkPassphrase === Networks.TESTNET ? TESTNET_HORIZON : MAINNET_HORIZON;
+  // Cora defaults to testnet when passphrase is omitted.
+  if (!networkPassphrase || networkPassphrase === Networks.TESTNET) return TESTNET_HORIZON;
+  return MAINNET_HORIZON;
 }
 
 /**

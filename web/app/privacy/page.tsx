@@ -195,7 +195,8 @@ export default function PrivacyPage() {
                   API keys are stored as bcrypt hashes with per-key salt — we can verify a key on
                   request but we cannot recover one. The database is encrypted at rest. HTTPS is
                   enforced on every endpoint with a 90-day certificate rotation. More detail on our
-                  security posture is on the <Link href="/security">Security</Link> page.
+                  security posture questions go to{' '}
+                  <a href="mailto:security@cora.dev">security@cora.dev</a>.
                 </p>
               </>
             ),
@@ -207,8 +208,7 @@ export default function PrivacyPage() {
                 <p>
                   Material changes to this policy (new sub-processor, new retention policy, new data
                   category collected) are announced via email to all active account holders at least
-                  30 days before they take effect. You can review the history of this page on our{' '}
-                  <Link href="/changelog">Changelog</Link>.
+                  30 days before they take effect.
                 </p>
                 <p>
                   Questions about this policy:{' '}

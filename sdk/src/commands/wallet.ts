@@ -3,12 +3,24 @@
 // one-liners to find out their own Stellar address or check whether
 // funding has landed.
 
+import { Networks } from '@stellar/stellar-sdk';
 import { loadCoraConfig } from '../config';
 import { getOWSPublicKey, getOWSBalance, addUsdcTrustlineOWS } from '../ows';
 
+/** --network > STELLAR_NETWORK > testnet (Cora default). */
+function resolveNetworkPassphrase(rest: string[]): string {
+  const fromFlag = parseFlag(rest, '--network');
+  const fromEnv =
+    process.env.STELLAR_NETWORK === 'testnet' || process.env.STELLAR_NETWORK === 'mainnet'
+      ? process.env.STELLAR_NETWORK
+      : undefined;
+  const network = fromFlag || fromEnv || 'testnet';
+  return network === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET;
+}
+
 function usage(): void {
   process.stderr
-    .write(`Usage: cora wallet <subcommand> [--vault-path <path>] [--name <walletname>] [--passphrase-env <ENVNAME>]
+    .write(`Usage: cora wallet <subcommand> [--vault-path <path>] [--name <walletname>] [--passphrase-env <ENVNAME>] [--network testnet|mainnet]
 
 Subcommands:
   address              Print the Stellar address for this agent's wallet
@@ -19,12 +31,16 @@ Subcommands:
                        raises the account's min reserve by 0.5 XLM.
   -h, --help           Show this message
 
+Options:
+  --network testnet|mainnet  Horizon/Soroban network. Default: STELLAR_NETWORK
+                             env, else testnet.
+
 Standard onboarding flow:
-  1. cora onboard --claim <code>
-  2. Operator sends at least 2 XLM to the wallet's Stellar address
-  3. cora wallet trustline    (opens the USDC trustline)
-  4. Operator sends USDC
-  5. cora purchase --amount <USD>
+  1. cora onboard --claim <code> --api-base http://127.0.0.1:4200/v1
+  2. Operator sends at least 2 testnet XLM to the wallet's Stellar address
+  3. cora wallet trustline --network testnet
+  4. Operator sends USDC (testnet) if paying with USDC
+  5. cora purchase --amount <USD> --network testnet
 
 Both subcommands read ~/.cora/config.json for the wallet name and
 vault path so you don't need to pass anything after 'cora onboard'.
@@ -99,10 +115,12 @@ export async function walletCommand(argv: string[]): Promise<number> {
     }
   }
 
+  const networkPassphrase = resolveNetworkPassphrase(rest);
+
   if (sub === 'balance') {
     try {
       const publicKey = getOWSPublicKey(walletName, vaultPath);
-      const bal = await getOWSBalance(walletName, vaultPath);
+      const bal = await getOWSBalance(walletName, vaultPath, networkPassphrase);
       process.stdout.write(`address: ${publicKey}\n`);
       process.stdout.write(`xlm:     ${bal.xlm}\n`);
       process.stdout.write(`usdc:    ${bal.usdc}\n`);
@@ -148,7 +166,12 @@ export async function walletCommand(argv: string[]): Promise<number> {
     try {
       const publicKey = getOWSPublicKey(walletName, vaultPath);
       process.stdout.write(`→ Opening USDC trustline for ${publicKey}…\n`);
-      const txHash = await addUsdcTrustlineOWS({ walletName, passphrase, vaultPath });
+      const txHash = await addUsdcTrustlineOWS({
+        walletName,
+        passphrase,
+        vaultPath,
+        networkPassphrase,
+      });
       if (txHash === null) {
         process.stdout.write(`✓ USDC trustline already exists on this wallet — nothing to do.\n`);
         return 0;

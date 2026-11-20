@@ -328,7 +328,8 @@ export interface TrustlineOpts {
  * new tx hash when a trustline is actually opened.
  */
 export async function addUsdcTrustlineOWS(opts: TrustlineOpts): Promise<string | null> {
-  const { walletName, passphrase, vaultPath, networkPassphrase = Networks.PUBLIC } = opts;
+  // Cora defaults to testnet; pass Networks.PUBLIC explicitly for mainnet.
+  const { walletName, passphrase, vaultPath, networkPassphrase = Networks.TESTNET } = opts;
   const publicKey = getOWSPublicKey(walletName, vaultPath);
   const horizonUrl = getHorizonUrl(networkPassphrase);
 
@@ -422,7 +423,7 @@ export async function payViaContractOWS(
     paymentAsset = 'usdc',
     passphrase,
     vaultPath,
-    networkPassphrase = Networks.PUBLIC,
+    networkPassphrase = Networks.TESTNET,
     sorobanRpcUrl,
   } = opts;
 
