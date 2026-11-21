@@ -251,7 +251,7 @@ export default function HomePage() {
           }}
         >
           MCP wiring ships after the core platform is stable on testnet. Use the dashboard and{' '}
-          <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em' }}>npx cora</code> today.
+          <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em' }}>npx @cora-agent/cora</code> today.
         </p>
       </section>
     </>

@@ -395,11 +395,11 @@ export async function onboardCommand(argv: string[]): Promise<number> {
       // Call this out explicitly — without it, any USDC payment sent
       // to the address bounces.
       process.stdout.write('  To receive USDC from the operator, open the USDC trustline first:\n');
-      process.stdout.write('    npx -y cora@latest wallet trustline\n');
+      process.stdout.write('    npx -y @cora-agent/cora@latest wallet trustline\n');
       process.stdout.write('\n');
     }
     process.stdout.write('  Try a test purchase:\n');
-    process.stdout.write('    npx -y cora@latest purchase --amount 0.01\n');
+    process.stdout.write('    npx -y @cora-agent/cora@latest purchase --amount 0.01\n');
     if (usdcNum > 0) {
       process.stdout.write('\n');
       process.stdout.write(`  (USDC balance ${balance.usdc} will be auto-picked for USDC-paid\n`);
@@ -413,7 +413,7 @@ export async function onboardCommand(argv: string[]): Promise<number> {
     process.stdout.write('      base reserve) + 0.5 XLM trustline subentry + ~0.5 headroom.\n');
     process.stdout.write('\n');
     process.stdout.write('  Step 2 — open the USDC trustline before any USDC payment:\n');
-    process.stdout.write('    npx -y cora@latest wallet trustline\n');
+    process.stdout.write('    npx -y @cora-agent/cora@latest wallet trustline\n');
     process.stdout.write('\n');
     process.stdout.write('    USDC is an ISSUED asset on Stellar — the holder account must\n');
     process.stdout.write('    authorize the issuer before it can hold any balance. A USDC\n');
@@ -425,7 +425,7 @@ export async function onboardCommand(argv: string[]): Promise<number> {
     process.stdout.write('  Step 3 — ask the operator to send USDC (or more XLM).\n');
     process.stdout.write('\n');
     process.stdout.write('  Step 4 — buy a card:\n');
-    process.stdout.write('    npx -y cora@latest purchase --amount <USD>\n');
+    process.stdout.write('    npx -y @cora-agent/cora@latest purchase --amount <USD>\n');
   }
   process.stdout.write('\n');
   process.stdout.write('Your operator sees setup progress live in the cora dashboard.\n');

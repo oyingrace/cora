@@ -14,7 +14,7 @@ When invoked:
    - `CORA_API_KEY` — get one at cora.dev
    - `OWS_WALLET_NAME` — the OWS wallet identifier; run `setup_wallet` (MCP) or:
      ```typescript
-     import { createOWSWallet } from 'cora';
+     import { createOWSWallet } from '@cora-agent/cora';
      const { publicKey } = createOWSWallet(process.env.OWS_WALLET_NAME!);
      // Fund publicKey with XLM and USDC, then come back
      ```
@@ -24,7 +24,7 @@ When invoked:
 3. Before purchasing, check the budget:
 
    ```typescript
-   import { CoraClient } from 'cora';
+   import { CoraClient } from '@cora-agent/cora';
    const client = new CoraClient({ apiKey: process.env.CORA_API_KEY! });
    const usage = await client.getUsage();
    ```
@@ -34,7 +34,7 @@ When invoked:
 4. Purchase the card:
 
    ```typescript
-   import { purchaseCardOWS } from 'cora';
+   import { purchaseCardOWS } from '@cora-agent/cora';
 
    const card = await purchaseCardOWS({
      apiKey: process.env.CORA_API_KEY!,

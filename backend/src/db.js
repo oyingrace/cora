@@ -523,7 +523,7 @@ applyMigration(14, () => {
 // dashboard mints a one-time claim code and only shows that in the
 // "Send this to your new agent" snippet.
 //
-// The agent runs `npx cora onboard --claim <code>`. The CLI hits
+// The agent runs `npx @cora-agent/cora onboard --claim <code>`. The CLI hits
 // POST /v1/agent/claim, the backend validates the code (exists, not
 // used, not expired), atomically marks it used, and returns the raw
 // api_key to the agent over HTTPS. The agent writes it to a local

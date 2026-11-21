@@ -5,7 +5,7 @@
 //   onboard    Trade a one-time claim code for an api key + create an
 //              OWS wallet. The agent-facing setup path (see skill.md).
 //   mcp        Start the MCP server over stdio (default when no
-//              subcommand is given, so `npx cora` in an MCP
+//              subcommand is given, so `npx @cora-agent/cora` in an MCP
 //              client's config "just works").
 //   version    Print the installed SDK version and exit.
 //
@@ -15,7 +15,7 @@
 
 async function main(): Promise<number> {
   // Default to help until MCP (Phase 10) is enabled — avoid booting a stub
-  // server when operators run bare `npx cora`.
+  // server when operators run bare `npx @cora-agent/cora`.
   const [, , cmd = 'help', ...rest] = process.argv;
 
   // Fire-and-forget update check. Runs in parallel with the command;

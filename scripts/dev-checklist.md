@@ -18,8 +18,8 @@ Then:
 1. Open http://localhost:3200 — lean landing, Sign in only in nav
 2. Open http://localhost:3200/dashboard — login OTP (check backend logs if SMTP unset)
 3. Create an agent → copy claim code
-4. `npx cora onboard --claim cora_… --api-base http://127.0.0.1:4200/v1`
-5. Fund wallet with testnet XLM → `npx cora purchase --amount 5 --network testnet`
+4. `npx @cora-agent/cora onboard --claim cora_… --api-base http://127.0.0.1:4200/v1`
+5. Fund wallet with testnet XLM → `npx @cora-agent/cora purchase --amount 5 --network testnet`
 6. Dashboard → Orders → Reveal card details
 
-MCP (`npx cora mcp`) intentionally exits until Phase 10 is approved.
+MCP (`npx @cora-agent/cora mcp`) intentionally exits until Phase 10 is approved.

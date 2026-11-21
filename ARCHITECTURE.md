@@ -8,7 +8,7 @@ Cora is an agentic virtual-card service on **Stellar testnet** (default). Agents
 | --------- | ----------- | ---- |
 | Backend   | `backend/`  | Agent HTTP API, Soroban watcher, order state machine, dashboard API, policy engine |
 | Web       | `web/`      | Landing + operator dashboard (Next.js, port 3200) |
-| SDK       | `sdk/`      | TypeScript client + CLI (`npx cora`); MCP stub until Phase 10 |
+| SDK       | `sdk/`      | TypeScript client + CLI (`npx @cora-agent/cora`); MCP stub until Phase 10 |
 | Contract  | `contract/` | Soroban receiver (`pay_usdc` / `pay_xlm`) |
 | Scripts   | `scripts/`  | mock-vcc (4300), init-receiver, verify |
 

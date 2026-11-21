@@ -7,7 +7,7 @@ Virtual Visa cards for AI agents — pay with USDC or XLM on Stellar, get a card
 ## Install
 
 ```bash
-npm install cora
+npm install @cora-agent/cora
 ```
 
 Requires Node.js 18 or newer (the SDK uses native `fetch`, `ReadableStream`, and `WebCrypto`). Supported platforms via the bundled `@ctx.com/stellar-ows-core` native wallet bindings: macOS (arm64 + x64), Linux (arm64 + x64). Windows is not currently supported.
@@ -31,7 +31,7 @@ then `rm -rf node_modules package-lock.json && npm install`. `npm audit` returns
 ## Quick start
 
 ```typescript
-import { createOWSWallet, getOWSBalance, purchaseCardOWS } from 'cora';
+import { createOWSWallet, getOWSBalance, purchaseCardOWS } from '@cora-agent/cora';
 
 // 1. Create (or fetch existing) encrypted wallet. Idempotent.
 const { publicKey } = createOWSWallet('my-agent');
@@ -71,7 +71,7 @@ Stellar accounts need a minimum balance to be activated on-chain:
 ## Step-by-step API (for more control)
 
 ```typescript
-import { CoraClient } from 'cora';
+import { CoraClient } from '@cora-agent/cora';
 
 const client = new CoraClient({
   apiKey: process.env.CORA_API_KEY!,
@@ -98,7 +98,7 @@ Add to your client's `mcpServers` config:
   "mcpServers": {
     "cora": {
       "command": "npx",
-      "args": ["-y", "cora"],
+      "args": ["-y", "@cora-agent/cora"],
       "env": { "CORA_API_KEY": "cora_<your key>" }
     }
   }
@@ -121,7 +121,7 @@ import {
   InvalidAmountError,
   OrderFailedError,
   WaitTimeoutError,
-} from 'cora';
+} from '@cora-agent/cora';
 
 try {
   const card = await purchaseCardOWS({ ... });

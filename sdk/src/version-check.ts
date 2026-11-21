@@ -27,7 +27,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-const REGISTRY_URL = 'https://registry.npmjs.org/cora/latest';
+// Scoped package — the unscoped `cora` name on npm belongs to an
+// unrelated publisher, so checking it would compare against the wrong
+// package entirely.
+const PACKAGE_NAME = '@cora-agent/cora';
+const REGISTRY_URL = `https://registry.npmjs.org/${PACKAGE_NAME}/latest`;
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // once per day
 const FETCH_TIMEOUT_MS = 2_000;
 const STATE_FILE = path.join(os.homedir(), '.cora', 'version-check.json');
@@ -106,7 +110,7 @@ function printWarning(local: string, latest: string): void {
   const msg = [
     '',
     `⚠  cora ${local} is out of date — ${latest} is available on npm.`,
-    `   Upgrade: npx -y cora@latest <command>  |  npm i -g cora@latest`,
+    `   Upgrade: npx -y ${PACKAGE_NAME}@latest <command>  |  npm i -g ${PACKAGE_NAME}@latest`,
     `   Release notes: https://cora.dev/changelog`,
     '',
   ].join('\n');

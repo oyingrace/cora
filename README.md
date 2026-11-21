@@ -14,7 +14,7 @@ Built on Stellar + Soroban. Agents pay USDC or XLM and receive a usable Visa car
 | ------------ | ------------------------------------------------- |
 | `backend/`   | Express API, Soroban watcher, dashboard API       |
 | `web/`       | Next.js landing + operator dashboard (port 3200)  |
-| `sdk/`       | TypeScript client + CLI (`npx cora`)              |
+| `sdk/`       | TypeScript client + CLI (`npx @cora-agent/cora`)              |
 | `contract/`  | Soroban receiver contract                         |
 | `scripts/`   | mock-vcc, init-receiver, verify                   |
 | `docs/`      | Product description                               |

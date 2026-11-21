@@ -10,7 +10,7 @@ Cora issues prepaid Visa virtual cards on demand. AI agents pay USDC or XLM on S
 - **Auth**: `X-Api-Key: cora_...` header on every request
 - **Payment**: Stellar testnet — USDC or XLM via Soroban contract call
 - **Typical latency**: ~45–120 seconds from payment confirmation to card delivery
-- **SDK**: `npm install cora` — CLI via `npx cora`
+- **SDK**: `npm install @cora-agent/cora` — CLI via `npx @cora-agent/cora`
 - **MCP**: not enabled yet (see `plan.md` Phase 10)
 
 ## Core flow
@@ -44,7 +44,7 @@ Both USDC and XLM quotes are returned; pick one by invoking `pay_usdc` or `pay_x
 ## SDK one-shot
 
 ```typescript
-import { purchaseCardOWS } from 'cora';
+import { purchaseCardOWS } from '@cora-agent/cora';
 
 const card = await purchaseCardOWS({
   apiKey: process.env.CORA_API_KEY!,
@@ -57,9 +57,9 @@ const card = await purchaseCardOWS({
 ## CLI
 
 ```bash
-npx cora onboard --claim cora_<code> --network testnet --api-base http://127.0.0.1:4200/v1
-npx cora purchase --amount 25 --network testnet
-npx cora wallet balance
+npx @cora-agent/cora onboard --claim cora_<code> --network testnet --api-base http://127.0.0.1:4200/v1
+npx @cora-agent/cora purchase --amount 25 --network testnet
+npx @cora-agent/cora wallet balance
 ```
 
 ## Phases

@@ -15,7 +15,7 @@ When invoked with an order ID:
 2. Fetch the order:
 
    ```typescript
-   import { CoraClient } from 'cora';
+   import { CoraClient } from '@cora-agent/cora';
 
    const client = new CoraClient({ apiKey: process.env.CORA_API_KEY! });
    const order = await client.getOrder('<order_id>');

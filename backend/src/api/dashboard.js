@@ -562,7 +562,7 @@ router.post('/api-keys', requirePermission('agent:create'), async (req, res) => 
   });
 
   // Mint a one-time claim code for the agent-facing onboarding flow.
-  // The agent runs `npx cora onboard --claim <code>` and the CLI
+  // The agent runs `npx @cora-agent/cora onboard --claim <code>` and the CLI
   // trades the code for the real api_key via POST /v1/agent/claim —
   // so the raw api_key never has to live in a pasted snippet (or the
   // agent's conversation transcript).

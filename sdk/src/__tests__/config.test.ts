@@ -179,9 +179,7 @@ describe('saveCoraConfig — F3 temp file hygiene', () => {
 
 describe('assertSafeBaseUrl — F4 embedded credentials', () => {
   it('accepts a bare https URL', () => {
-    expect(assertSafeBaseUrl('http://127.0.0.1:4200/v1')).toMatch(
-      /^https:\/\/api\.cora\.com\/v1/,
-    );
+    expect(assertSafeBaseUrl('https://api.cora.dev/v1')).toMatch(/^https:\/\/api\.cora\.dev\/v1/);
   });
 
   it('rejects a URL with a username in the userinfo (classic hostname-swap)', () => {
@@ -309,6 +307,6 @@ describe('resolveCredentials', () => {
     process.env.CORA_BASE_URL = 'https://env.cora.dev/v1';
     const result = resolveCredentials({ apiKey: 'from_opts' });
     expect(result.apiKey).toBe('from_opts');
-    expect(result.baseUrl).toMatch(/^https:\/\/env\.cora\.com/);
+    expect(result.baseUrl).toMatch(/^https:\/\/env\.cora\.dev/);
   });
 });

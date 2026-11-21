@@ -103,10 +103,10 @@ export function CreateAgentDrawer({ open, onClose }: Props) {
   const snippet = created?.claim
     ? [
         'Read https://cora.dev/skill.md and set up this agent by running:',
-        `npx -y cora@latest onboard --claim ${created.claim.code} --api-base http://127.0.0.1:4200/v1`,
+        `npx -y @cora-agent/cora@latest onboard --claim ${created.claim.code} --api-base http://127.0.0.1:4200/v1`,
         '',
         'Then purchase on testnet:',
-        'npx -y cora@latest purchase --amount 5 --network testnet',
+        'npx -y @cora-agent/cora@latest purchase --amount 5 --network testnet',
       ].join('\n')
     : '';
 

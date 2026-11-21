@@ -201,14 +201,14 @@ export default function DeveloperPage() {
             </a>{' '}
             for the full reference.
           </div>
-          <Snippet title="Install" code={`npm install cora@latest`} />
+          <Snippet title="Install" code={`npm install @cora-agent/cora@latest`} />
           <Snippet
             title="Onboard an agent"
-            code={`npx -y cora@latest onboard --claim <claim-code>`}
+            code={`npx -y @cora-agent/cora@latest onboard --claim <claim-code>`}
           />
           <Snippet
             title="Purchase a card"
-            code={`import { purchaseCardOWS } from 'cora';
+            code={`import { purchaseCardOWS } from '@cora-agent/cora';
 
 const card = await purchaseCardOWS({
   apiKey: process.env.CORA_API_KEY!,
