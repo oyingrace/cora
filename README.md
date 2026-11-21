@@ -2,7 +2,7 @@
 
 **The financial operating system for AI agents.**
 
-Give your AI agents financial autonomy — wallets, spend controls, and virtual Visa cards — without giving up financial control.
+Give your AI agents financial autonomy — wallets, spend controls, and virtual Visa cards without giving up financial control.
 
 Built on Stellar + Soroban. Agents pay USDC or XLM and receive a usable Visa card in about a minute.
 
