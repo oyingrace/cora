@@ -935,9 +935,35 @@ applyMigration(29, () => {
   }
 });
 
+// Migration 30: server-held agent wallets.
+//   - agent_wallets: one row per agent whose Stellar keypair is held and
+//     signed by the Cora backend (instead of the CLI keeping the secret
+//     on the agent's machine). secret_sealed is ALWAYS an AES-256-GCM
+//     secret-box blob — lib/wallet-vault refuses to create or open a
+//     wallet without CORA_SECRET_BOX_KEY, even in dev/test, because a
+//     plaintext spending key at rest is a drain-the-wallet incident, not
+//     a "dev convenience".
+//   - api_key_id is a soft FK (same pattern as orders.mpp_challenge_id):
+//     a hard FK with ON DELETE CASCADE would silently destroy the only
+//     copy of a funded wallet's secret when an operator deletes the
+//     agent. The wallet row outlives the api_key so funds remain
+//     recoverable by ops; UNIQUE keeps it one-wallet-per-agent.
+applyMigration(30, () => {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS agent_wallets (
+      id             TEXT PRIMARY KEY,
+      api_key_id     TEXT NOT NULL UNIQUE,
+      public_key     TEXT NOT NULL UNIQUE,
+      secret_sealed  TEXT NOT NULL,
+      network        TEXT NOT NULL DEFAULT 'testnet',
+      created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+});
+
 // EXPECTED_SCHEMA_VERSION must match the last `applyMigration(N)` call
 // above. Bump it in lock-step with any new migration.
-const EXPECTED_SCHEMA_VERSION = 29;
+const EXPECTED_SCHEMA_VERSION = 30;
 const actualVersion = getSchemaVersion();
 if (actualVersion > EXPECTED_SCHEMA_VERSION) {
   console.error(

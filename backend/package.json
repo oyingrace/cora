@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.85.0",
+    "@cora-agent/cora": "file:../sdk",
     "@stellar/stellar-sdk": "^17.4.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",

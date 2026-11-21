@@ -688,7 +688,23 @@ router.patch('/api-keys/:id', requirePermission('agent:update'), async (req, res
   if (spend_limit_usdc !== undefined) fields.spend_limit_usdc = spend_limit_usdc || null;
   if (default_webhook_url !== undefined) fields.default_webhook_url = default_webhook_url || null;
   if (label !== undefined) fields.label = label || null;
-  if (wallet_public_key !== undefined) fields.wallet_public_key = wallet_public_key || null;
+  if (wallet_public_key !== undefined) {
+    // Server-held wallets: api_keys.wallet_public_key mirrors
+    // agent_wallets.public_key so the funding UI / balance poller work
+    // unchanged. Letting a PATCH overwrite (or null) that mirror would
+    // desync the display address from the key the backend actually
+    // signs with — an operator would fund address A while the server
+    // spends from wallet B. Block the edit while a server wallet exists.
+    const { getServerWallet } = require('../lib/wallet-vault');
+    if (getServerWallet(req.params.id)) {
+      return res.status(409).json({
+        error: 'server_wallet_managed',
+        message:
+          'This agent has a server-held wallet; its address is managed by Cora and cannot be edited.',
+      });
+    }
+    fields.wallet_public_key = wallet_public_key || null;
+  }
   if (policy_daily_limit_usdc !== undefined)
     fields.policy_daily_limit_usdc = policy_daily_limit_usdc || null;
   if (policy_single_tx_limit_usdc !== undefined)
@@ -817,6 +833,82 @@ router.post('/api-keys/:id/unsuspend', requirePermission('agent:suspend'), (req,
     resourceId: req.params.id,
   });
   res.json({ ok: true });
+});
+
+// ── Server-held wallets ───────────────────────────────────────────────────────
+
+// POST /dashboard/api-keys/:id/server-wallet — create a server-held
+// Stellar wallet for an agent. The backend generates the keypair, seals
+// the secret with CORA_SECRET_BOX_KEY (hard requirement — no plaintext
+// fallback for spending keys), and returns ONLY the public address so
+// the operator can fund it. The secret key is never returned to anyone.
+router.post('/api-keys/:id/server-wallet', requirePermission('agent:update'), (req, res) => {
+  const { createServerWallet, WalletVaultError } = require('../lib/wallet-vault');
+
+  // Ownership check first so a foreign agent id reads as 404 (same
+  // pattern as every other /api-keys/:id route — don't leak existence).
+  const owned = db
+    .prepare(`SELECT id FROM api_keys WHERE id = ? AND dashboard_id = ?`)
+    .get(req.params.id, req.dashboard.id);
+  if (!owned) return res.status(404).json({ error: 'not_found' });
+
+  let wallet;
+  try {
+    wallet = createServerWallet(req.params.id);
+  } catch (err) {
+    if (err instanceof WalletVaultError) {
+      const status =
+        err.code === 'vault_key_missing'
+          ? 503
+          : err.code === 'wallet_exists' || err.code === 'external_wallet_exists'
+            ? 409
+            : err.code === 'api_key_not_found'
+              ? 404
+              : 500;
+      return res.status(status).json({ error: err.code, message: err.message });
+    }
+    throw err;
+  }
+
+  bizEvent('dashboard.server_wallet_created', {
+    dashboard_id: req.dashboard.id,
+    api_key_id: req.params.id,
+    public_key: wallet.publicKey,
+    actor: req.user.email,
+  });
+  recordAuditFromReq(req, 'agent.server_wallet_create', {
+    resourceType: 'agent',
+    resourceId: req.params.id,
+    details: { public_key: wallet.publicKey, network: wallet.network },
+  });
+
+  res.status(201).json({
+    api_key_id: req.params.id,
+    public_key: wallet.publicKey,
+    network: wallet.network,
+    custody: 'server',
+  });
+});
+
+// GET /dashboard/api-keys/:id/server-wallet — public info only (address,
+// network, created_at). 404 when the agent has no server-held wallet so
+// the UI can distinguish server custody from an agent-held address.
+router.get('/api-keys/:id/server-wallet', requirePermission('agent:read'), (req, res) => {
+  const { getServerWallet } = require('../lib/wallet-vault');
+  const owned = db
+    .prepare(`SELECT id FROM api_keys WHERE id = ? AND dashboard_id = ?`)
+    .get(req.params.id, req.dashboard.id);
+  if (!owned) return res.status(404).json({ error: 'not_found' });
+
+  const wallet = getServerWallet(req.params.id);
+  if (!wallet) return res.status(404).json({ error: 'no_server_wallet' });
+  res.json({
+    api_key_id: req.params.id,
+    public_key: wallet.public_key,
+    network: wallet.network,
+    created_at: wallet.created_at,
+    custody: 'server',
+  });
 });
 
 // ── Approval requests ─────────────────────────────────────────────────────────

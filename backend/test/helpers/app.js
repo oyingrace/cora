@@ -125,6 +125,7 @@ function resetDb() {
     'agent_claims',
     'stellar_dead_letter',
     'unmatched_payments',
+    'agent_wallets',
   ]) {
     try {
       db.prepare(`DELETE FROM ${tbl}`).run();
