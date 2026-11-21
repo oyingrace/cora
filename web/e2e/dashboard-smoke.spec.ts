@@ -344,8 +344,11 @@ test.describe('Developer page — published SDK', () => {
 
     const main = page.locator('main');
     await expect(main).toContainText('SDK & CLI');
-    await expect(main).not.toContainText('on npm');
-    await expect(main).not.toContainText('checking npm');
+    // Badge falls back to a bare "npm" pill — no version, no spinner.
+    // (Scoped to the badge text; the description itself says "on npm".)
+    await expect(main.getByText(/^v\d+\.\d+\.\d+ on npm$/)).toHaveCount(0);
+    await expect(main.getByText('checking npm…')).toHaveCount(0);
+    await expect(main.getByText('npm', { exact: true })).toBeVisible();
     await expect(main).toContainText('npm install @cora-agent/cora');
   });
 });
