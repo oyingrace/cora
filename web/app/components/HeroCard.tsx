@@ -20,8 +20,8 @@
 // noise, orbs) is a faithful port of the standalone prototype at
 // ~/code/coraanimation/index.html with three deltas:
 //   - Idle drift dialled back from ±8/±6 to ±2.5/±1.8 per pass.
-//   - The brand mark is replaced with a Cora wordmark rendered
-//     via mask-image so it inherits the card's cream ink.
+//   - The brand mark is replaced with a plain-text Cora wordmark
+//     in the card's cream ink (no SVG asset).
 //   - The bottomline shows 'YOUR AGENT' instead of 'ASH / PRIMARY'.
 
 'use client';
@@ -194,7 +194,7 @@ export function HeroCard() {
           <div className="hc-orb hc-orb-two" aria-hidden />
           <div className="hc-card-content">
             <header className="hc-topline">
-              <span className="hc-brand-wordmark" role="img" aria-label="Cora" />
+              <span className="hc-brand-wordmark">Cora</span>
               <div className="hc-topline-right">Virtual Card</div>
             </header>
             <div className="hc-middle">
@@ -638,21 +638,17 @@ function CardStyles() {
         white-space: nowrap;
       }
 
-      /* Cora wordmark on the card face — SVG mask coloured with cream ink. */
+      /* Cora wordmark on the card face — live text in cream ink. */
       .hc-brand-wordmark {
         display: inline-block;
-        width: 5.4rem;
-        height: 1.25rem;
-        background-color: #fff9ee;
-        mask-image: url(/logo.svg);
-        -webkit-mask-image: url(/logo.svg);
-        mask-repeat: no-repeat;
-        -webkit-mask-repeat: no-repeat;
-        mask-size: contain;
-        -webkit-mask-size: contain;
-        mask-position: left center;
-        -webkit-mask-position: left center;
-        filter: drop-shadow(0 0 12px rgba(255, 207, 110, 0.25));
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 650;
+        letter-spacing: -0.035em;
+        text-transform: none;
+        line-height: 1;
+        color: #fff9ee;
+        text-shadow: 0 0 12px rgba(255, 207, 110, 0.25);
         flex-shrink: 0;
       }
 

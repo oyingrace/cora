@@ -7,8 +7,7 @@
 // Visual language (aligned with the Cora brand refresh):
 //   - Darker canvas (#050505) and softer borders so the emails read
 //     engineering-grade rather than marketing-flashy
-//   - Cora wordmark pulled from https://cora.dev/logo.svg with a
-//     serif text fallback for Outlook (which strips SVG)
+//   - Cora wordmark rendered as plain text (no logo asset)
 //   - Muted green accent (#7cffb2) matching the dashboard + landing
 //   - Georgia-first serif stack for headlines so editorial character
 //     survives even where no custom fonts load; Fraunces would be
@@ -135,11 +134,6 @@ const FONT_SANS =
 const FONT_SERIF = "Georgia,'Times New Roman',Times,serif";
 const FONT_MONO = "ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace";
 
-// Email clients render the SVG raw (no CSS mask), so we serve a pre-tinted
-// light variant. The web app uses /logo.svg as a mask-image (colour from
-// currentColor), so we can't re-use it here — on a dark email background
-// it comes out invisible black.
-const LOGO_URL = 'https://cora.dev/logo-light.svg';
 // Public URL for the dashboard CTAs. All transactional emails deep-link
 // into the authenticated dashboard since operators need a session
 // regardless of email content.
@@ -147,24 +141,14 @@ const DASHBOARD_URL = 'https://cora.dev/dashboard';
 
 // ── Shared chrome ─────────────────────────────────────────────────────────────
 
-// The header renders the Cora wordmark as an SVG <img> with a
-// serif text fallback inside the alt attribute. Most modern clients
-// (Gmail web + mobile, Apple Mail, iOS Mail) load the SVG; Outlook
-// shows the alt text styled via inline CSS so it degrades to a
-// readable "Cora" in serif.
+// The header renders the Cora wordmark as plain text — no image asset,
+// so it renders identically in every client (including Outlook, which
+// strips SVG) and never shows a broken-image placeholder.
 function header() {
   return `
     <tr>
       <td style="padding:32px 36px 0 36px;">
-        <a href="https://cora.dev" style="text-decoration:none;color:${COLOR.text};" aria-label="Cora">
-          <img
-            src="${LOGO_URL}"
-            width="120"
-            height="28"
-            alt="Cora"
-            style="display:block;border:0;outline:none;text-decoration:none;height:28px;width:120px;max-width:120px;font-family:${FONT_SERIF};font-style:italic;font-size:22px;font-weight:600;color:${COLOR.text};letter-spacing:-0.01em;"
-          />
-        </a>
+        <a href="https://cora.dev" style="display:inline-block;text-decoration:none;font-family:${FONT_SANS};font-size:24px;font-weight:700;line-height:28px;letter-spacing:-0.03em;color:${COLOR.text};">Cora</a>
       </td>
     </tr>
   `;

@@ -33,7 +33,7 @@ function SvgIcon({ d, size = 16 }: { d: string; size?: number }) {
 export function Header() {
   const { user, info, approvals } = useDashboard();
   const router = useRouter();
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
 

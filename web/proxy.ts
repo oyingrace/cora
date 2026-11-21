@@ -25,12 +25,11 @@ import type { NextRequest } from 'next/server';
 
 const STATUS_HOST = 'status.cora.dev';
 
-// Match /logo.svg, /icon.png, /skill.md, /robots.txt, /sitemap.xml,
-// /humans.txt, /manifest.webmanifest, /.well-known/*, etc. Anything
-// with a dot in the last path segment is a static file that should
-// pass through unchanged; rewriting /logo.svg to /status would return
-// the status page HTML with Content-Type text/html, which the browser
-// can't use as a CSS mask-image → the wordmark disappears.
+// Match /icon.png, /skill.md, /robots.txt, /sitemap.xml, /humans.txt,
+// /manifest.webmanifest, /.well-known/*, etc. Anything with a dot in
+// the last path segment is a static file that should pass through
+// unchanged; rewriting it to /status would return the status page HTML
+// with Content-Type text/html instead of the asset.
 const STATIC_FILE_RE = /\.[a-zA-Z0-9]+$/;
 
 export function proxy(request: NextRequest) {
@@ -47,7 +46,7 @@ export function proxy(request: NextRequest) {
     //   - API routes (/api/*)
     //   - Well-known endpoints (/.well-known/security.txt etc.)
     //   - Any path whose last segment has a file extension (static
-    //     assets from /public — logo.svg, icon.png, skill.md, ...)
+    //     assets from /public — icon.png, skill.md, ...)
     // Everything else rewrites to /status so the subdomain is a
     // dedicated health page regardless of path.
     if (
@@ -84,7 +83,7 @@ export const config = {
       //   \.well-known           → security.txt, etc.
       //   .*\.[a-zA-Z0-9]+$      → any path ending in a file extension,
       //                            which in Next's flat /public layout
-      //                            catches logo.svg / icon.png / skill.md
+      //                            catches icon.png / skill.md
       //                            / robots.txt / humans.txt / sitemap.xml
       //                            / manifest.webmanifest / favicon.ico
       // Everything else passes through to the proxy() function above.

@@ -36,7 +36,7 @@ export default function SettingsPage() {
   const toast = useToast();
 
   // Theme preference
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   useEffect(() => {
     setTheme(loadTheme());
   }, []);

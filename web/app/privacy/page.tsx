@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { PageHero, LegalBody } from '@/app/components/MarketingPage';
 
 export const metadata: Metadata = {

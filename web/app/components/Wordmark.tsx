@@ -1,71 +1,41 @@
-// Cora wordmark. Rendered as a CSS mask over the current text color
-// so it inherits whatever `color` the parent sets — light on dark surfaces,
-// dark on light surfaces, a single accent for emphasis, etc. No inline
-// SVG, no children, no theme branching. Just set `color:` on the parent.
+// Cora wordmark — plain typographic lockup, no SVG asset.
 //
-// Chrome's SVG rendering can blur subpixel edges on hidpi displays. We
-// force crisp edges via `image-rendering: crisp-edges` on webkit and the
-// mask mode mask-repeat: no-repeat / mask-size: contain combo locks the
-// aspect so it doesn't skew during layout.
-//
-// Two variants:
-//   <Wordmark />    — full horizontal lockup (globe + "Cora")
-//   <Wordmark mark /> — just the globemark, useful for tight nav bars
+// Rendered as live text in the display font so it inherits whatever
+// `color` the parent sets (light on dark, dark on light, accent, …).
+// No image requests, no mask-image, nothing to go stale on a rebrand.
 //
 // Props:
-//   height — vertical size in px (default 28). Width auto-scales.
-//   className — forwarded to the span for layout.
+//   height — visual cap box in px (default 28). Font size scales from it.
+//   className / style — forwarded to the span for layout.
 
 import type { CSSProperties } from 'react';
 
-const ASPECT = 522.42 / 120.59; // full lockup aspect ratio from the SVG viewBox
-const MARK_ASPECT = 120.59 / 120.59; // square for just the mark crop
-
 interface Props {
   height?: number;
-  mark?: boolean;
-  title?: string;
   className?: string;
   style?: CSSProperties;
 }
 
-export function Wordmark({
-  height = 28,
-  mark = false,
-  title = 'Cora',
-  className,
-  style,
-}: Props) {
-  const aspect = mark ? MARK_ASPECT : ASPECT;
-  const width = Math.round(height * aspect);
-  // When rendering the mark-only variant, we crop the left ~23% of the
-  // full SVG (the globe sits at x ≈ 0-120 of a 522 viewBox). The
-  // mask-size uses the full logo width so the crop snaps the globemark
-  // to the visible box without needing a second asset.
-  const maskSize = mark ? `${width * (522.42 / 120.59)}px ${height}px` : `contain`;
-  const maskPosition = mark ? 'left center' : 'center';
-
+export function Wordmark({ height = 28, className, style }: Props) {
   return (
     <span
-      role="img"
-      aria-label={title}
       className={className}
       style={{
-        display: 'inline-block',
-        width,
+        display: 'inline-flex',
+        alignItems: 'center',
         height,
-        backgroundColor: 'currentColor',
-        maskImage: 'url(/logo.svg)',
-        maskRepeat: 'no-repeat',
-        maskSize,
-        maskPosition,
-        WebkitMaskImage: 'url(/logo.svg)',
-        WebkitMaskRepeat: 'no-repeat',
-        WebkitMaskSize: maskSize,
-        WebkitMaskPosition: maskPosition,
+        fontFamily: 'var(--font-display)',
+        fontSize: Math.round(height * 0.92),
+        fontWeight: 650,
+        letterSpacing: '-0.035em',
+        lineHeight: 1,
+        color: 'currentColor',
+        whiteSpace: 'nowrap',
         flexShrink: 0,
         ...style,
       }}
-    />
+    >
+      Cora
+    </span>
   );
 }

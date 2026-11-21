@@ -38,7 +38,7 @@ export default function HomePage() {
         <p
           style={{
             marginTop: '1.1rem',
-            maxWidth: 34,
+            maxWidth: '34ch',
             fontSize: 'clamp(1.15rem, 2.4vw, 1.45rem)',
             lineHeight: 1.35,
             letterSpacing: '-0.02em',
@@ -51,7 +51,7 @@ export default function HomePage() {
         <p
           style={{
             marginTop: '0.85rem',
-            maxWidth: 40,
+            maxWidth: '40ch',
             fontSize: '1.05rem',
             lineHeight: 1.55,
             color: 'var(--fg-muted)',
@@ -120,7 +120,7 @@ export default function HomePage() {
         >
           Pay on-chain. Spend anywhere Visa works.
         </h2>
-        <p style={{ color: 'var(--fg-muted)', maxWidth: 40, lineHeight: 1.6, margin: '0 0 2.5rem' }}>
+        <p style={{ color: 'var(--fg-muted)', maxWidth: '40ch', lineHeight: 1.6, margin: '0 0 2.5rem' }}>
           Agents fund a Soroban receiver contract. Cora observes the payment and delivers card
           credentials — number, CVV, expiry.
         </p>
@@ -184,7 +184,7 @@ export default function HomePage() {
         >
           A control plane for every agent.
         </h2>
-        <p style={{ color: 'var(--fg-muted)', maxWidth: 42, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: 'var(--fg-muted)', maxWidth: '42ch', lineHeight: 1.6, margin: 0 }}>
           Budgets, approval thresholds, suspension, audit logs, and team permissions — so agents can
           operate independently while remaining accountable to you.
         </p>
@@ -209,7 +209,7 @@ export default function HomePage() {
         >
           Built for MCP-compatible agents.
         </h2>
-        <p style={{ color: 'var(--fg-muted)', maxWidth: 42, lineHeight: 1.6, margin: '0 0 1rem' }}>
+        <p style={{ color: 'var(--fg-muted)', maxWidth: '42ch', lineHeight: 1.6, margin: '0 0 1rem' }}>
           Cora is designed so assistants like Claude can call wallets, budgets, and card purchases
           through Model Context Protocol tools — alongside the HTTP API and CLI.
         </p>
@@ -218,7 +218,7 @@ export default function HomePage() {
             color: 'var(--fg-dim)',
             fontSize: '0.95rem',
             margin: 0,
-            maxWidth: 40,
+            maxWidth: '40ch',
             lineHeight: 1.5,
           }}
         >

@@ -2,10 +2,9 @@
 
 /* Cora design system
    ----------------------------------------------------------------------
-   Dark theme — default. Light theme is an opt-in override via
-   <html data-theme="light">. System theme is resolved in JS at mount
-   time (see app/dashboard/_lib/theme.ts) so we can honour OS preference
-   without a flash of wrong colors. */
+   Light theme — default (:root). Dark theme is an opt-in override via
+   <html data-theme="dark">, set by the dashboard theme toggle. System
+   theme is resolved in JS at mount time (see app/dashboard/_ui/theme.ts). */
 
 :root {
   /* Cora — Apple-inspired light system (design/skill.md).
@@ -261,8 +260,8 @@ pre {
 /* ── Selection ─────────────────────────────────────────────────────── */
 
 ::selection {
-  background: var(--green);
-  color: #000;
+  background: var(--blue-muted);
+  color: var(--fg);
 }
 
 /* ── Focus styles ──────────────────────────────────────────────────── */
@@ -272,7 +271,7 @@ pre {
    The 2px offset lifts it above the element's own border so rounded
    pills and cards still look clean. */
 :focus-visible {
-  outline: 2px solid var(--green);
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -637,6 +636,52 @@ tr:hover td {
   }
   50% {
     opacity: 0.4;
+  }
+}
+
+/* ── Marketing nav (NavLinks.tsx) ──────────────────────────────────── */
+
+/* Desktop: inline pill links, burger hidden. The burger carries an
+   inline `display: none`, so the mobile rule below needs !important. */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.nav-link:hover {
+  opacity: 0.72;
+}
+.nav-link:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 640px) {
+  .nav-burger {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg);
+  }
+  .nav-menu {
+    display: none;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg);
+    z-index: 49;
+  }
+  .nav-menu--open {
+    display: flex;
+  }
+  .nav-menu .nav-link {
+    font-size: 1.15rem !important;
+    padding: 0.85rem 1rem !important;
   }
 }
 

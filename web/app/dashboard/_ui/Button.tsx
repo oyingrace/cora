@@ -1,14 +1,10 @@
 // Minimal button primitive. Four variants:
-//   primary    — subtle green chip (matches the live indicator), used
-//                for the highest-emphasis CTA in a region
+//   primary    — solid Cora blue, used for the highest-emphasis CTA
+//                in a region (matches the landing page CTA)
 //   secondary  — bordered surface, used for everything that isn't a
 //                primary or destructive action
 //   ghost      — transparent / text-only
 //   danger     — red-muted, used for destructive actions
-//
-// Bright #00ff88 fills are deliberately avoided — they read as
-// "hackathon" rather than "enterprise". The Live indicator's tone is
-// the green we use everywhere now.
 
 import type { CSSProperties, ReactNode, ButtonHTMLAttributes } from 'react';
 
@@ -35,22 +31,22 @@ export function Button({
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.4rem',
-    fontFamily: 'var(--font-mono)',
-    fontSize: size === 'sm' ? '0.7rem' : '0.75rem',
-    fontWeight: 600,
-    letterSpacing: '0.01em',
-    padding: size === 'sm' ? '0.35rem 0.65rem' : '0.5rem 0.85rem',
-    borderRadius: 6,
+    fontFamily: 'var(--font-body)',
+    fontSize: size === 'sm' ? '0.78rem' : '0.85rem',
+    fontWeight: 560,
+    letterSpacing: '-0.01em',
+    padding: size === 'sm' ? '0.4rem 0.75rem' : '0.55rem 1rem',
+    borderRadius: 980,
     cursor: 'pointer',
-    transition: 'background 120ms, border-color 120ms, color 120ms',
+    transition: 'background 120ms, border-color 120ms, color 120ms, opacity 160ms',
     lineHeight: 1,
     whiteSpace: 'nowrap',
   };
   const variants: Record<Variant, CSSProperties> = {
     primary: {
-      background: 'var(--green-muted)',
-      color: 'var(--green)',
-      border: '1px solid var(--green-border)',
+      background: 'var(--blue)',
+      color: '#fff',
+      border: '1px solid var(--blue)',
     },
     secondary: {
       background: 'var(--surface)',

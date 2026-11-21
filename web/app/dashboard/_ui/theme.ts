@@ -6,11 +6,15 @@ export type Theme = 'dark' | 'light' | 'system';
 
 const STORAGE_KEY = 'cora.theme';
 
+// Cora's design system is light-first (see globals.css :root). Dark is
+// an explicit opt-in from the dashboard theme toggle.
+export const DEFAULT_THEME: Theme = 'light';
+
 export function loadTheme(): Theme {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return DEFAULT_THEME;
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === 'dark' || stored === 'light' || stored === 'system') return stored;
-  return 'dark';
+  return DEFAULT_THEME;
 }
 
 export function saveTheme(theme: Theme): void {

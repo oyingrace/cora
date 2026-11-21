@@ -36,11 +36,10 @@ app/
 public/
   skill.md             Agent-facing setup guide
   llms.txt             Machine-readable service index
-  logo-light.svg       Brand logo (dark-bg variant)
 ```
 
 ## Notes
 
-- Uses `next/font/google` for Fraunces (display), IBM Plex Sans (body), and IBM Plex Mono (data). The build downloads font files from Google Fonts at build time — ensure outbound HTTPS access is available in your build environment.
+- Uses the system font stack (SF Pro / Segoe UI / system-ui, `ui-monospace` for data) defined in `app/globals.css` — no web fonts are downloaded. The brand wordmark is plain text (`app/components/Wordmark.tsx`); there is no logo SVG.
 - The dashboard authenticates via email OTP (6-digit code), session cookie is `sameSite: strict`. The marketing surface is fully public.
 - Next.js 16 file conventions are in force: middleware lives in `proxy.ts` at the web root (the old `middleware.ts` name is deprecated and logs a migration notice in the dev server).

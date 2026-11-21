@@ -67,27 +67,28 @@ export function AuthGate() {
       <div
         style={{
           width: '100%',
-          maxWidth: 360,
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          padding: '2rem',
-          boxShadow: 'var(--shadow-card)',
+          maxWidth: 380,
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border-hairline)',
+          borderRadius: 20,
+          padding: '2.25rem 2rem 2rem',
+          boxShadow: 'var(--shadow-hero)',
         }}
       >
         <div
           style={{
-            marginBottom: '0.5rem',
+            marginBottom: '0.6rem',
             color: 'var(--fg)',
           }}
         >
-          <Wordmark height={22} />
+          <Wordmark height={30} />
         </div>
         <div
           style={{
-            fontSize: '0.8rem',
-            color: 'var(--fg-dim)',
-            marginBottom: '1.5rem',
+            fontSize: '0.95rem',
+            color: 'var(--fg-muted)',
+            letterSpacing: '-0.01em',
+            marginBottom: '1.75rem',
           }}
         >
           Sign in to your operator dashboard
@@ -125,7 +126,7 @@ export function AuthGate() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}
           >
-            <div style={{ fontSize: '0.75rem', color: 'var(--fg-dim)' }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--fg-muted)' }}>
               Code sent to <strong style={{ color: 'var(--fg)' }}>{email}</strong>
             </div>
             <Input
@@ -151,13 +152,13 @@ export function AuthGate() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--fg-dim)',
-                fontSize: '0.72rem',
+                color: 'var(--blue)',
+                fontSize: '0.82rem',
                 cursor: 'pointer',
                 marginTop: '0.25rem',
               }}
             >
-              ← use different email
+              Use a different email
             </button>
           </form>
         )}
@@ -166,12 +167,12 @@ export function AuthGate() {
           <div
             style={{
               marginTop: '0.85rem',
-              fontSize: '0.72rem',
+              fontSize: '0.82rem',
               color: 'var(--red)',
-              padding: '0.55rem 0.7rem',
+              padding: '0.6rem 0.8rem',
               background: 'var(--red-muted)',
               border: '1px solid var(--red-border)',
-              borderRadius: 6,
+              borderRadius: 10,
             }}
           >
             {error}
