@@ -23,7 +23,7 @@ import { useToast } from '../../_ui/Toast';
 import { formatUsd, timeAgo, truncateAddress, bucketSpendByDay } from '../../_lib/format';
 import { IN_FLIGHT_ORDER_STATUSES } from '../../_lib/constants';
 import type { AgentStateName } from '../../_lib/types';
-import { updateAgent, deleteAgent, suspendAgent } from '../../_lib/api';
+import { updateAgent, deleteAgent, suspendAgent, createServerWallet } from '../../_lib/api';
 import { setAgentGroup, useAgentGroup } from '../../_lib/groups';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -34,6 +34,7 @@ export default function AgentDetailPage({ params }: PageProps) {
   const agent = agents.find((a) => a.id === id);
   const toast = useToast();
   const [topUpOpen, setTopUpOpen] = useState(false);
+  const [creatingWallet, setCreatingWallet] = useState(false);
   const group = useAgentGroup(id);
   const [groupDraft, setGroupDraft] = useState<string>('');
 
@@ -107,6 +108,20 @@ export default function AgentDetailPage({ params }: PageProps) {
       toast.push(liveAgent.suspended ? 'Agent resumed' : 'Agent suspended', 'success');
     } catch (err) {
       toast.push((err as Error).message || 'failed', 'error');
+    }
+  }
+
+  async function handleCreateServerWallet() {
+    if (creatingWallet) return;
+    setCreatingWallet(true);
+    try {
+      const wallet = await createServerWallet(id);
+      await refresh();
+      toast.push(`Server wallet created — fund ${wallet.public_key.slice(0, 8)}…`, 'success');
+    } catch (err) {
+      toast.push((err as Error).message || 'wallet creation failed', 'error');
+    } finally {
+      setCreatingWallet(false);
     }
   }
 
@@ -566,10 +581,39 @@ export default function AgentDetailPage({ params }: PageProps) {
             </Button>
           </div>
         ) : (
-          <EmptyState
-            title="No wallet yet"
-            description="This agent hasn't been onboarded yet. Once the claim code is redeemed and a wallet is created, a deposit address will appear here."
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <EmptyState
+              title="No wallet yet"
+              description="This agent hasn't been onboarded yet. Redeem the claim code to create an agent-held wallet — or let Cora hold the keys and sign payments server-side."
+            />
+            <div
+              style={{
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                padding: '0.85rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+              }}
+            >
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--fg)' }}>
+                Create server wallet
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--fg-dim)', lineHeight: 1.5 }}>
+                Cora generates a Stellar wallet for this agent and stores the key encrypted on the
+                backend. Payments are signed server-side — no CLI onboarding needed. The funding
+                address will appear here once created.
+              </div>
+              <Button
+                size="sm"
+                onClick={handleCreateServerWallet}
+                disabled={creatingWallet}
+                style={{ justifyContent: 'center' }}
+              >
+                {creatingWallet ? 'Creating…' : 'Create server wallet'}
+              </Button>
+            </div>
+          </div>
         )}
       </Drawer>
     </div>

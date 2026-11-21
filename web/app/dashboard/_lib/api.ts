@@ -15,6 +15,7 @@ import {
   type AlertFiring,
   type AuditLogEntry,
   type EnabledMerchant,
+  type ServerWallet,
   type WebhookDelivery,
 } from './types';
 
@@ -129,6 +130,23 @@ export async function updateAgent(
       body: JSON.stringify(body),
     }),
   );
+}
+
+/**
+ * Create a server-held wallet for an agent. The backend generates and
+ * stores the (encrypted) key; only the public funding address comes back.
+ */
+export async function createServerWallet(id: string): Promise<ServerWallet> {
+  return json(
+    await fetch(`${API_BASE}/dashboard/api-keys/${id}/server-wallet`, { method: 'POST' }),
+  );
+}
+
+/** Server wallet public info, or null when the agent has none (404). */
+export async function fetchServerWallet(id: string): Promise<ServerWallet | null> {
+  const res = await fetch(`${API_BASE}/dashboard/api-keys/${id}/server-wallet`);
+  if (res.status === 404) return null;
+  return json(res);
 }
 
 export async function deleteAgent(id: string): Promise<void> {

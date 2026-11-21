@@ -40,6 +40,15 @@ export interface ApiKey {
   agent?: AgentState;
 }
 
+/** Server-held wallet (custody: Cora backend signs payments). Public info only. */
+export interface ServerWallet {
+  api_key_id: string;
+  public_key: string;
+  network: string;
+  created_at?: string;
+  custody: 'server';
+}
+
 export interface Order {
   id: string;
   status: string;
