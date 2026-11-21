@@ -45,7 +45,7 @@ export default function HomePage() {
               fontWeight: 500,
             }}
           >
-            Financial autonomy for AI agents — without giving up financial control.
+            Give your agent a virtual card in ~60s
           </p>
           <p
             style={{

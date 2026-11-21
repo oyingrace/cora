@@ -305,6 +305,51 @@ test.describe('Dashboard shell', () => {
   });
 });
 
+test.describe('Developer page — published SDK', () => {
+  test('shows the scoped npm package, live version badge, and copyable snippets', async ({
+    page,
+  }) => {
+    await installMocks(page);
+    // Pin the registry response so the test is deterministic offline.
+    await page.route('**/registry.npmjs.org/@cora-agent/cora/latest', (route: Route) =>
+      route.fulfill({
+        status: 200,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        json: { name: '@cora-agent/cora', version: '9.9.9' },
+      }),
+    );
+    await page.goto('/dashboard/developer');
+    await page.waitForLoadState('networkidle', { timeout: 10_000 });
+
+    const main = page.locator('main');
+    await expect(main).toContainText('SDK & CLI');
+    await expect(main.getByText('v9.9.9 on npm')).toBeVisible();
+    await expect(main).toContainText('npm install @cora-agent/cora');
+    await expect(main).toContainText('npx -y @cora-agent/cora@latest onboard --claim');
+    await expect(main).toContainText("from '@cora-agent/cora'");
+    // The old unscoped name belongs to a different npm publisher.
+    await expect(main).not.toContainText('npm install cora');
+
+    const npmLink = main.locator('a[href="https://www.npmjs.com/package/@cora-agent/cora"]');
+    await expect(npmLink.first()).toBeVisible();
+  });
+
+  test('degrades to a plain npm link when the registry is unreachable', async ({ page }) => {
+    await installMocks(page);
+    await page.route('**/registry.npmjs.org/@cora-agent/cora/latest', (route: Route) =>
+      route.abort(),
+    );
+    await page.goto('/dashboard/developer');
+    await page.waitForLoadState('networkidle', { timeout: 10_000 });
+
+    const main = page.locator('main');
+    await expect(main).toContainText('SDK & CLI');
+    await expect(main).not.toContainText('on npm');
+    await expect(main).not.toContainText('checking npm');
+    await expect(main).toContainText('npm install @cora-agent/cora');
+  });
+});
+
 test.describe('Coming soon UI', () => {
   test('Teams page shows Coming soon pill and disabled form', async ({ page }) => {
     await installMocks(page);

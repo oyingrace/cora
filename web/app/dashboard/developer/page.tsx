@@ -17,9 +17,36 @@ import { useToast } from '../_ui/Toast';
 import { fetchWebhookDeliveries, sendTestWebhook } from '../_lib/api';
 import type { WebhookDelivery } from '../_lib/types';
 import { timeAgo } from '../_lib/format';
+import { SDK_PACKAGE, sdkNpx } from '../_lib/constants';
+
+type SdkVersionState =
+  { state: 'loading' } | { state: 'ready'; version: string } | { state: 'unavailable' };
+
+// Reads the live `latest` dist-tag from the public npm registry so the
+// badge always reflects what agents actually get from `npx …@latest`,
+// without a dashboard redeploy on every SDK release. Failure (offline,
+// registry hiccup) degrades to a plain "npm" link — never an error toast.
+function useSdkLatestVersion(): SdkVersionState {
+  const [s, setS] = useState<SdkVersionState>({ state: 'loading' });
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(SDK_PACKAGE.registryLatestUrl, { signal: ctrl.signal })
+      .then((r) => (r.ok ? (r.json() as Promise<{ version?: unknown }>) : null))
+      .then((body) => {
+        const v = body?.version;
+        setS(typeof v === 'string' ? { state: 'ready', version: v } : { state: 'unavailable' });
+      })
+      .catch(() => {
+        if (!ctrl.signal.aborted) setS({ state: 'unavailable' });
+      });
+    return () => ctrl.abort();
+  }, []);
+  return s;
+}
 
 export default function DeveloperPage() {
   const toast = useToast();
+  const sdkVersion = useSdkLatestVersion();
   const [deliveries, setDeliveries] = useState<WebhookDelivery[] | null>(null);
   const [selected, setSelected] = useState<WebhookDelivery | null>(null);
   const [testUrl, setTestUrl] = useState('');
@@ -60,8 +87,93 @@ export default function DeveloperPage() {
     <PageContainer>
       <PageHeader
         title="Developer"
-        subtitle="Webhook delivery log, send a test webhook, and grab integration snippets."
+        subtitle="SDK & CLI install, webhook delivery log, and a test-webhook sender."
       />
+
+      <Card
+        title="SDK & CLI"
+        actions={
+          <a
+            href={SDK_PACKAGE.npmUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ display: 'inline-flex', textDecoration: 'none' }}
+            title="View on npm"
+          >
+            {sdkVersion.state === 'ready' ? (
+              <Pill tone="green">v{sdkVersion.version} on npm</Pill>
+            ) : sdkVersion.state === 'loading' ? (
+              <Pill tone="neutral" pulse>
+                checking npm…
+              </Pill>
+            ) : (
+              <Pill tone="neutral">npm</Pill>
+            )}
+          </a>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          <div
+            style={{
+              fontSize: '0.78rem',
+              color: 'var(--fg-muted)',
+              lineHeight: 1.55,
+            }}
+          >
+            <a
+              href={SDK_PACKAGE.npmUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                color: 'var(--blue)',
+                textDecoration: 'none',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              {SDK_PACKAGE.name}
+            </a>{' '}
+            is published on npm. It ships the <code>cora</code> CLI for onboarding agents and a
+            TypeScript SDK for purchases, and targets Stellar testnet by default.
+          </div>
+          <Snippet title="Install" code={`npm install ${SDK_PACKAGE.name}`} />
+          <Snippet
+            title="Onboard an agent"
+            code={sdkNpx('onboard --claim <claim-code> --api-base http://127.0.0.1:4200/v1')}
+          />
+          <Snippet
+            title="Purchase from the CLI"
+            code={sdkNpx('purchase --amount 5 --network testnet')}
+          />
+          <Snippet
+            title="Purchase a card (TypeScript)"
+            code={`import { purchaseCardOWS } from '${SDK_PACKAGE.name}';
+
+const card = await purchaseCardOWS({
+  apiKey: process.env.CORA_API_KEY!,
+  walletName: 'my-agent',
+  amountUsdc: '10.00',
+  paymentAsset: 'xlm',
+});`}
+          />
+          <Snippet
+            title="Verify a webhook signature (Node)"
+            code={`import crypto from 'node:crypto';
+
+function verify(req, secret) {
+  const ts = req.headers['x-cora-timestamp'];
+  const sig = req.headers['x-cora-signature']?.replace('sha256=', '');
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(\`\${ts}.\${req.rawBody}\`)
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(sig, 'hex'),
+    Buffer.from(expected, 'hex')
+  );
+}`}
+          />
+        </div>
+      </Card>
 
       <Card title="Send a test webhook">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
@@ -104,8 +216,8 @@ export default function DeveloperPage() {
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--fg-dim)', lineHeight: 1.5 }}>
             We'll POST a sample <code>delivered</code> payload with fake card data. If you pass a
-            secret, we'll sign it with <code>X-Cora-Signature: sha256=hex(HMAC(ts.body))</code>{' '}
-            and <code>X-Cora-Timestamp</code>.
+            secret, we'll sign it with <code>X-Cora-Signature: sha256=hex(HMAC(ts.body))</code> and{' '}
+            <code>X-Cora-Timestamp</code>.
           </div>
           <Button
             variant="primary"
@@ -178,63 +290,6 @@ export default function DeveloperPage() {
             </tbody>
           </table>
         )}
-      </Card>
-
-      <Card title="Integration snippets">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          <div
-            style={{
-              fontSize: '0.78rem',
-              color: 'var(--fg-muted)',
-              lineHeight: 1.55,
-            }}
-          >
-            The <code>cora</code> npm package ships a CLI for onboarding and a TypeScript SDK
-            for purchases. See{' '}
-            <a
-              href="https://cora.dev/docs"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: 'var(--green)', textDecoration: 'none' }}
-            >
-              docs
-            </a>{' '}
-            for the full reference.
-          </div>
-          <Snippet title="Install" code={`npm install @cora-agent/cora@latest`} />
-          <Snippet
-            title="Onboard an agent"
-            code={`npx -y @cora-agent/cora@latest onboard --claim <claim-code>`}
-          />
-          <Snippet
-            title="Purchase a card"
-            code={`import { purchaseCardOWS } from '@cora-agent/cora';
-
-const card = await purchaseCardOWS({
-  apiKey: process.env.CORA_API_KEY!,
-  walletName: 'my-agent',
-  amountUsdc: '10.00',
-  paymentAsset: 'xlm',
-});`}
-          />
-          <Snippet
-            title="Verify a webhook signature (Node)"
-            code={`import crypto from 'node:crypto';
-
-function verify(req, secret) {
-  const ts = req.headers['x-cora-timestamp'];
-  const sig = req.headers['x-cora-signature']?.replace('sha256=', '');
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(\`\${ts}.\${req.rawBody}\`)
-    .digest('hex');
-  return crypto.timingSafeEqual(
-    Buffer.from(sig, 'hex'),
-    Buffer.from(expected, 'hex')
-  );
-}`}
-          />
-        </div>
       </Card>
 
       {selected && (

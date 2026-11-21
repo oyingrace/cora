@@ -17,6 +17,7 @@ import { Drawer } from '../_ui/Drawer';
 import { Input } from '../_ui/Input';
 import { Button } from '../_ui/Button';
 import { createAgent } from '../_lib/api';
+import { sdkNpx } from '../_lib/constants';
 import type { NewKeyData } from '../_lib/types';
 
 interface Props {
@@ -103,10 +104,10 @@ export function CreateAgentDrawer({ open, onClose }: Props) {
   const snippet = created?.claim
     ? [
         'Read https://cora.dev/skill.md and set up this agent by running:',
-        `npx -y @cora-agent/cora@latest onboard --claim ${created.claim.code} --api-base http://127.0.0.1:4200/v1`,
+        sdkNpx(`onboard --claim ${created.claim.code} --api-base http://127.0.0.1:4200/v1`),
         '',
         'Then purchase on testnet:',
-        'npx -y @cora-agent/cora@latest purchase --amount 5 --network testnet',
+        sdkNpx('purchase --amount 5 --network testnet'),
       ].join('\n')
     : '';
 
@@ -360,8 +361,8 @@ export function CreateAgentDrawer({ open, onClose }: Props) {
               >
                 Send at least 2 XLM (1 XLM account minimum + 0.5 XLM trustline + 0.5 headroom). To
                 receive USDC, the agent must first open a USDC trustline by running{' '}
-                <code>cora wallet trustline</code>. The stepper will flip to{' '}
-                <strong>Funded</strong> automatically once Horizon sees the deposit.
+                <code>cora wallet trustline</code>. The stepper will flip to <strong>Funded</strong>{' '}
+                automatically once Horizon sees the deposit.
               </div>
             </div>
           )}

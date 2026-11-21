@@ -94,6 +94,23 @@ export const TERMINAL_ORDER_STATUSES: ReadonlySet<string> = new Set([
   'pending_manual_recovery',
 ]);
 
+// Published SDK + CLI package. Single source of truth for every
+// install / npx snippet the dashboard renders, so a future rename only
+// touches this block. The unscoped `cora` name on npm belongs to an
+// unrelated publisher — always use the scoped name.
+export const SDK_PACKAGE = {
+  name: '@cora-agent/cora',
+  npmUrl: 'https://www.npmjs.com/package/@cora-agent/cora',
+  // npm's registry sends `Access-Control-Allow-Origin: *`, so the
+  // dashboard can read the live `latest` version straight from the browser.
+  registryLatestUrl: 'https://registry.npmjs.org/@cora-agent/cora/latest',
+} as const;
+
+/** `npx -y @cora-agent/cora@latest <args>` */
+export function sdkNpx(args: string): string {
+  return `npx -y ${SDK_PACKAGE.name}@latest ${args}`;
+}
+
 export function getOrderStatusLabel(status: string): string {
   return ORDER_STATUS_LABEL[status] ?? status.replace(/_/g, ' ');
 }

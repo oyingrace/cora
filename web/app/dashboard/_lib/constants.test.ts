@@ -14,7 +14,23 @@ import {
   TERMINAL_ORDER_STATUSES,
   getOrderStatusLabel,
   getOrderStatusTone,
+  SDK_PACKAGE,
+  sdkNpx,
 } from './constants';
+
+describe('SDK package constants', () => {
+  it('uses the scoped package name (unscoped `cora` belongs to someone else)', () => {
+    expect(SDK_PACKAGE.name).toBe('@cora-agent/cora');
+    expect(SDK_PACKAGE.npmUrl).toContain(SDK_PACKAGE.name);
+    expect(SDK_PACKAGE.registryLatestUrl).toContain(`${SDK_PACKAGE.name}/latest`);
+  });
+
+  it('sdkNpx builds a pinned-to-latest npx command', () => {
+    expect(sdkNpx('onboard --claim abc')).toBe(
+      'npx -y @cora-agent/cora@latest onboard --claim abc',
+    );
+  });
+});
 
 describe('agent state lookup tables', () => {
   it('has an entry for every known state', () => {
