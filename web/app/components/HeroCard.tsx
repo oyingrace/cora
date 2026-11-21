@@ -22,7 +22,8 @@
 //   - Idle drift dialled back from ±8/±6 to ±2.5/±1.8 per pass.
 //   - The brand mark is replaced with a plain-text Cora wordmark
 //     in the card's cream ink (no SVG asset).
-//   - The bottomline shows 'YOUR AGENT' instead of 'ASH / PRIMARY'.
+//   - The bottomline shows 'YOUR AGENT' instead of 'ASH / PRIMARY',
+//     plus a typeset VISA mark bottom-right.
 
 'use client';
 
@@ -204,13 +205,19 @@ export function HeroCard() {
                 <strong>$250.00</strong>
               </div>
               <div className="hc-digits">
-                <div className="hc-label">Card Sequence</div>
-                <div className="hc-value">4242 0402 4020 7890</div>
+                <div className="hc-label">Card Number</div>
+                <div className="hc-value">4242 •••• •••• 4200</div>
               </div>
             </div>
             <footer className="hc-bottomline">
-              <div>YOUR AGENT</div>
-              <div>VALID 12/28</div>
+              <div className="hc-holder">
+                <div>YOUR AGENT</div>
+                <div>VALID 12/28</div>
+              </div>
+              {/* Visa wordmark set in type (no image asset). */}
+              <span className="hc-visa" aria-label="Visa">
+                VISA
+              </span>
             </footer>
           </div>
         </article>
@@ -403,8 +410,10 @@ function CardStyles() {
           ),
           #0a0a0a;
         border: 1px solid rgba(255, 255, 255, 0.16);
+        /* Softer drop shadow than the dark-canvas original — on Cora's
+           light background a 0.65 black shadow reads as a smudge. */
         box-shadow:
-          0 2rem 4rem rgba(0, 0, 0, 0.65),
+          0 2rem 4rem -1rem rgba(0, 0, 0, 0.38),
           0 0 0 1px rgba(255, 255, 255, 0.04) inset,
           0 0 4rem rgba(255, 207, 110, 0.13);
         transform-style: preserve-3d;
@@ -652,6 +661,29 @@ function CardStyles() {
         flex-shrink: 0;
       }
 
+      .hc-bottomline {
+        align-items: flex-end;
+      }
+      .hc-holder {
+        display: grid;
+        gap: 0.3rem;
+      }
+
+      /* Visa wordmark — heavy italic sans in cream ink, bottom-right
+         like a physical card. Rendered as text so there's no logo file. */
+      .hc-visa {
+        font-family: var(--font-display);
+        font-size: 1.85rem;
+        font-weight: 800;
+        font-style: italic;
+        letter-spacing: -0.02em;
+        line-height: 0.8;
+        text-transform: none;
+        color: #fff9ee;
+        text-shadow: 0 0 14px rgba(255, 207, 110, 0.28);
+        transform: translateZ(60px);
+      }
+
       .hc-middle {
         display: grid;
         align-content: center;
@@ -823,6 +855,9 @@ function CardStyles() {
         }
         .hc-rings {
           display: none;
+        }
+        .hc-visa {
+          font-size: 1.5rem;
         }
       }
       @media (max-width: 380px) {

@@ -49,8 +49,8 @@
   --shadow-hero: 0 24px 80px -32px rgba(0, 0, 0, 0.18);
   --shadow-float: 0 16px 40px -20px rgba(0, 0, 0, 0.16);
 
-  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui,
-    sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
@@ -636,6 +636,33 @@ tr:hover td {
   }
   50% {
     opacity: 0.4;
+  }
+}
+
+/* ── Landing hero (app/page.tsx) ───────────────────────────────────── */
+
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: 3rem;
+}
+.landing-hero-copy {
+  min-width: 0;
+}
+.landing-hero-card {
+  display: flex;
+  justify-content: center;
+  /* Room for the 3D tilt + drop shadow so they don't clip. */
+  padding: 1.5rem 0 2.5rem;
+}
+
+@media (max-width: 860px) {
+  .landing-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+    min-height: auto !important;
+    padding-top: 3rem !important;
   }
 }
 

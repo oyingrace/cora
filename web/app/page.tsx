@@ -1,103 +1,106 @@
 import Link from 'next/link';
+import { HeroCard } from '@/app/components/HeroCard';
 
 export default function HomePage() {
   return (
     <>
-      {/* Hero — one composition: brand, headline, sentence, CTA */}
+      {/* Hero — copy on the left, the virtual Visa card on the right.
+          The grid collapses to one column on narrow viewports (see
+          .landing-hero in globals.css) so the card stacks under the CTA. */}
       <section
+        className="landing-hero"
         style={{
           minHeight: 'min(92vh, 880px)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
           padding: '4rem 1.5rem 5rem',
           maxWidth: 980,
           margin: '0 auto',
           position: 'relative',
         }}
       >
-        <p
-          className="type-eyebrow"
-          style={{ marginBottom: '1.25rem', color: 'var(--blue)' }}
-        >
-          Stellar testnet
-        </p>
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(3.25rem, 9vw, 5.5rem)',
-            fontWeight: 650,
-            letterSpacing: '-0.045em',
-            lineHeight: 1.02,
-            margin: 0,
-            color: 'var(--fg)',
-          }}
-        >
-          Cora
-        </h1>
-        <p
-          style={{
-            marginTop: '1.1rem',
-            maxWidth: '34ch',
-            fontSize: 'clamp(1.15rem, 2.4vw, 1.45rem)',
-            lineHeight: 1.35,
-            letterSpacing: '-0.02em',
-            color: 'var(--fg)',
-            fontWeight: 500,
-          }}
-        >
-          Financial autonomy for AI agents — without giving up financial control.
-        </p>
-        <p
-          style={{
-            marginTop: '0.85rem',
-            maxWidth: '40ch',
-            fontSize: '1.05rem',
-            lineHeight: 1.55,
-            color: 'var(--fg-muted)',
-          }}
-        >
-          Dedicated wallets, spend limits, and virtual Visa cards on Stellar. Pay in USDC or XLM;
-          get a usable card in about a minute.
-        </p>
-        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-          <Link
-            href="/dashboard"
+        <div className="landing-hero-copy">
+          <p className="type-eyebrow" style={{ marginBottom: '1.25rem', color: 'var(--blue)' }}>
+            Stellar testnet
+          </p>
+          <h1
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0.85rem 1.35rem',
-              borderRadius: 980,
-              background: 'var(--blue)',
-              color: '#fff',
-              textDecoration: 'none',
-              fontWeight: 560,
-              fontSize: '1rem',
-              letterSpacing: '-0.01em',
-              transition: 'transform 100ms ease-out, opacity 160ms ease',
-            }}
-          >
-            Sign in
-          </Link>
-          <a
-            href="#how"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0.85rem 1.35rem',
-              borderRadius: 980,
-              background: 'var(--surface-3)',
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(3.25rem, 9vw, 5.5rem)',
+              fontWeight: 650,
+              letterSpacing: '-0.045em',
+              lineHeight: 1.02,
+              margin: 0,
               color: 'var(--fg)',
-              textDecoration: 'none',
-              fontWeight: 520,
-              fontSize: '1rem',
-              letterSpacing: '-0.01em',
             }}
           >
-            How it works
-          </a>
+            Cora
+          </h1>
+          <p
+            style={{
+              marginTop: '1.1rem',
+              maxWidth: '34ch',
+              fontSize: 'clamp(1.15rem, 2.4vw, 1.45rem)',
+              lineHeight: 1.35,
+              letterSpacing: '-0.02em',
+              color: 'var(--fg)',
+              fontWeight: 500,
+            }}
+          >
+            Financial autonomy for AI agents — without giving up financial control.
+          </p>
+          <p
+            style={{
+              marginTop: '0.85rem',
+              maxWidth: '40ch',
+              fontSize: '1.05rem',
+              lineHeight: 1.55,
+              color: 'var(--fg-muted)',
+            }}
+          >
+            Dedicated wallets, spend limits, and virtual Visa cards on Stellar. Pay in USDC or XLM;
+            get a usable card in about a minute.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem', flexWrap: 'wrap' }}>
+            <Link
+              href="/dashboard"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.85rem 1.35rem',
+                borderRadius: 980,
+                background: 'var(--blue)',
+                color: '#fff',
+                textDecoration: 'none',
+                fontWeight: 560,
+                fontSize: '1rem',
+                letterSpacing: '-0.01em',
+                transition: 'transform 100ms ease-out, opacity 160ms ease',
+              }}
+            >
+              Sign in
+            </Link>
+            <a
+              href="#how"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.85rem 1.35rem',
+                borderRadius: 980,
+                background: 'var(--surface-3)',
+                color: 'var(--fg)',
+                textDecoration: 'none',
+                fontWeight: 520,
+                fontSize: '1rem',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              How it works
+            </a>
+          </div>
+        </div>
+        <div className="landing-hero-card">
+          <HeroCard />
         </div>
       </section>
 
@@ -120,7 +123,14 @@ export default function HomePage() {
         >
           Pay on-chain. Spend anywhere Visa works.
         </h2>
-        <p style={{ color: 'var(--fg-muted)', maxWidth: '40ch', lineHeight: 1.6, margin: '0 0 2.5rem' }}>
+        <p
+          style={{
+            color: 'var(--fg-muted)',
+            maxWidth: '40ch',
+            lineHeight: 1.6,
+            margin: '0 0 2.5rem',
+          }}
+        >
           Agents fund a Soroban receiver contract. Cora observes the payment and delivers card
           credentials — number, CVV, expiry.
         </p>
@@ -150,12 +160,23 @@ export default function HomePage() {
               b: 'When fulfillment completes, the agent gets PAN, CVV, and expiry — ready for online checkout.',
             },
           ].map((step) => (
-            <li key={step.n} style={{ display: 'grid', gridTemplateColumns: '3.5rem 1fr', gap: '1rem' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)', fontSize: '0.85rem' }}>
+            <li
+              key={step.n}
+              style={{ display: 'grid', gridTemplateColumns: '3.5rem 1fr', gap: '1rem' }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--fg-dim)',
+                  fontSize: '0.85rem',
+                }}
+              >
                 {step.n}
               </span>
               <div>
-                <h3 style={{ margin: '0 0 0.35rem', fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
+                <h3
+                  style={{ margin: '0 0 0.35rem', fontSize: '1.15rem', letterSpacing: '-0.02em' }}
+                >
                   {step.t}
                 </h3>
                 <p style={{ margin: 0, color: 'var(--fg-muted)', lineHeight: 1.55 }}>{step.b}</p>
@@ -209,7 +230,14 @@ export default function HomePage() {
         >
           Built for MCP-compatible agents.
         </h2>
-        <p style={{ color: 'var(--fg-muted)', maxWidth: '42ch', lineHeight: 1.6, margin: '0 0 1rem' }}>
+        <p
+          style={{
+            color: 'var(--fg-muted)',
+            maxWidth: '42ch',
+            lineHeight: 1.6,
+            margin: '0 0 1rem',
+          }}
+        >
           Cora is designed so assistants like Claude can call wallets, budgets, and card purchases
           through Model Context Protocol tools — alongside the HTTP API and CLI.
         </p>
