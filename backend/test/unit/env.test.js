@@ -155,7 +155,7 @@ describe('F2-env: INTERNAL_EMAILS per-entry validation', () => {
   it('trims whitespace and lowercases', () => {
     const r = _EnvSchema.safeParse({
       ...baseEnv(),
-      INTERNAL_EMAILS: '  Ops@Cora.COM ,  Dev@cora.dev ',
+      INTERNAL_EMAILS: '  Ops@Cora.DEV ,  Dev@cora.dev ',
     });
     assert.equal(r.success, true);
     assert.deepEqual(r.data.INTERNAL_EMAILS, ['ops@cora.dev', 'dev@cora.dev']);
@@ -353,12 +353,14 @@ describe('F5-env: reserved TLDs are treated as local', () => {
     assert.equal(r.success, true);
   });
 
-  it('rejects http://127.0.0.1:4200 under NODE_ENV=test (real prod URL)', () => {
-    // The guard still correctly fires on a real production URL — this
-    // is the whole point of the check and must not regress.
+  it('rejects https://api.cora.dev under NODE_ENV=test (real prod URL)', () => {
+    // The guard fires on a real production HTTPS hostname that is not a
+    // reserved local TLD (.test, .localhost, .local) or a loopback address.
+    // api.cora.dev is a genuine public host — using NODE_ENV=test against
+    // it looks like a misconfigured production deploy.
     const r = _EnvSchema.safeParse({
       ...baseEnv(),
-      CORA_BASE_URL: 'http://127.0.0.1:4200',
+      CORA_BASE_URL: 'https://api.cora.dev',
     });
     assert.equal(r.success, false);
     assert.ok(issueFor(r, 'NODE_ENV'));

@@ -226,11 +226,17 @@ const EnvSchema = z
     STUCK_FAIL_AFTER_MS: z.string().regex(/^\d+$/).optional(),
     MAX_FULFILLMENT_ATTEMPTS: z.string().regex(/^\d+$/).optional(),
 
-    // Machine Payments Protocol (MPP). Off by default — the routes
-    // don't even mount unless MPP_ENABLED is explicitly set to 'true'.
-    // Phased rollout: ship the code dark in prod, flip the flag after
-    // staging bake.
+    // Machine Payments Protocol (MPP). Off by default.
     MPP_ENABLED: z.enum(['true', 'false']).optional().default('false'),
+
+    // MCP HTTP endpoint. Off by default — flip to 'true' once a Cloudflare
+    // Tunnel (or other public HTTPS URL) is in place and MCP_ENABLED is set.
+    MCP_ENABLED: z.enum(['true', 'false']).optional().default('false'),
+    // Max milliseconds purchase_vcc waits for card fulfillment before handing
+    // the order_id back to the model. Default 90s (well inside any MCP timeout).
+    MCP_PURCHASE_WAIT_MS: z.string().regex(/^\d+$/).optional().default('90000'),
+    // Per-IP rate limit for /mcp requests (per minute). Default 60.
+    MCP_RATE_LIMIT: z.string().regex(/^\d+$/).optional().default('60'),
     // Challenge TTL in milliseconds. 10 minutes is tight for the
     // Stellar confirmation timeline (~5s) but gives agents ample slack.
     MPP_CHALLENGE_TTL_MS: z

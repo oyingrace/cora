@@ -112,7 +112,7 @@ describe('requireInternal — domain allow', () => {
 
   it('matches the @cora.dev domain case-insensitively', () => {
     const mw = freshMiddleware();
-    const { nextCalled } = runMiddleware(mw, { id: 'u1', email: 'OPS@CORA.COM' });
+    const { nextCalled } = runMiddleware(mw, { id: 'u1', email: 'OPS@CORA.DEV' });
     assert.equal(nextCalled, true);
   });
 

@@ -703,6 +703,16 @@ if ((process.env.MPP_ENABLED || 'false') === 'true') {
   app.use('/v1', buildMppRouter());
 }
 
+// MCP HTTP endpoint — POST /mcp. Gated by MCP_ENABLED=true.
+// Mounted BEFORE the /v1 auth chain because /mcp has its own auth layer
+// (same X-Api-Key bcrypt path, but no MCP request should ever fall through
+// to the /v1 auth middleware or routes).
+if ((process.env.MCP_ENABLED || 'false') === 'true') {
+  const { buildMcpRouter } = require('./mcp/server');
+  app.use('/mcp', buildMcpRouter());
+  log('info', '[mcp] endpoint enabled at POST /mcp');
+}
+
 // Order is critical: authFailureLimiter MUST run before auth. If it
 // runs after, the bcrypt compare has already executed and the cap is
 // pointless. The limiter internally checks the counter at request

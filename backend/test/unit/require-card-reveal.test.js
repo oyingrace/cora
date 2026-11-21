@@ -159,7 +159,7 @@ describe('requireCardReveal — allowlist', () => {
   });
 
   it('matches email case-insensitively', () => {
-    process.env.CORA_CARD_REVEAL_EMAILS = 'Ops@Cora.Com';
+    process.env.CORA_CARD_REVEAL_EMAILS = 'Ops@Cora.Dev';
     const mw = freshMiddleware();
     const { nextCalled } = runMiddleware(mw, { id: 'u1', email: 'ops@cora.dev' });
     assert.equal(nextCalled, true);
