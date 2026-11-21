@@ -138,12 +138,37 @@ function buildMcpRouter() {
   router.use(mcpLimiter);
 
   // POST /mcp — authenticate then handle one stateless MCP request.
+  // Accepts two auth mechanisms, tried in order:
+  //   1. Authorization: Bearer <oauth_token>  — from claude.ai OAuth connector
+  //   2. X-Api-Key: cora_...                  — raw API key (CLI/SDK/direct)
   router.post('/', async (req, res) => {
-    const rawKey = /** @type {string | undefined} */ (req.headers['x-api-key']);
-    const apiKey = await authenticateKey(rawKey);
+    // Try OAuth Bearer token first.
+    let apiKey = null;
+    const authHeader = typeof req.headers.authorization === 'string'
+      ? req.headers.authorization : null;
+    if (authHeader?.toLowerCase().startsWith('bearer ')) {
+      const rawToken = authHeader.slice(7).trim();
+      // Only attempt OAuth resolution if OAUTH_ENABLED — avoids a DB query
+      // on every request when OAuth is not configured.
+      if ((process.env.OAUTH_ENABLED || 'false') === 'true') {
+        const { resolveOAuthToken } = require('../oauth/router');
+        apiKey = resolveOAuthToken(rawToken);
+        if (!apiKey) {
+          bizEvent('mcp.oauth_auth_failed', { ip: req.ip });
+          return res.status(401).json({ error: 'invalid_token',
+            error_description: 'OAuth token is invalid, expired, or revoked' });
+        }
+      }
+    }
+
+    // Fall back to X-Api-Key if no Bearer token was resolved.
     if (!apiKey) {
-      bizEvent('mcp.auth_failed', { ip: req.ip });
-      return res.status(401).json({ error: 'invalid_api_key' });
+      const rawKey = /** @type {string | undefined} */ (req.headers['x-api-key']);
+      apiKey = await authenticateKey(rawKey);
+      if (!apiKey) {
+        bizEvent('mcp.auth_failed', { ip: req.ip });
+        return res.status(401).json({ error: 'invalid_api_key' });
+      }
     }
 
     bizEvent('mcp.request', { api_key_id: apiKey.id, ip: req.ip });

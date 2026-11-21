@@ -1458,6 +1458,79 @@ router.get('/platform-wallet', requirePlatformOwner, (req, res) => {
   }
 });
 
+// ── OAuth client management ───────────────────────────────────────────────────
+//
+// Dashboard owners can register OAuth clients (MCP connectors) scoped to
+// their dashboard. Only available when OAUTH_ENABLED=true; returns 503 otherwise.
+// The raw client_secret is returned exactly once at creation and never again.
+
+// POST /dashboard/oauth/clients — register a new OAuth client.
+router.post('/oauth/clients', requirePermission('agent:update'), (req, res) => {
+  if ((process.env.OAUTH_ENABLED || 'false') !== 'true') {
+    return res.status(503).json({ error: 'oauth_disabled',
+      message: 'Set OAUTH_ENABLED=true in the backend environment to use OAuth clients.' });
+  }
+
+  const name = shortString(req.body?.name, 120);
+  const redirectUri = req.body?.redirect_uri;
+
+  if (!name) return res.status(400).json({ error: 'invalid_request', message: 'name is required' });
+  if (!redirectUri || typeof redirectUri !== 'string') {
+    return res.status(400).json({ error: 'invalid_request', message: 'redirect_uri is required' });
+  }
+  // redirect_uri must be a valid HTTPS URL (or http for localhost/dev).
+  try {
+    const u = new URL(redirectUri);
+    if (!['http:', 'https:'].includes(u.protocol)) throw new Error('bad scheme');
+  } catch {
+    return res.status(400).json({ error: 'invalid_request', message: 'redirect_uri must be a valid http(s) URL' });
+  }
+
+  const clientId = `cora_oauth_${require('crypto').randomBytes(12).toString('hex')}`;
+  const rawSecret = `cora_secret_${require('crypto').randomBytes(24).toString('hex')}`;
+  const secretHash = require('crypto').createHash('sha256').update(rawSecret).digest('hex');
+  const id = uuidv4();
+
+  db.prepare(
+    `INSERT INTO oauth_clients (id, client_id, client_secret_hash, redirect_uri, name)
+     VALUES (?, ?, ?, ?, ?)`,
+  ).run(id, clientId, secretHash, redirectUri, name);
+
+  recordAuditFromReq(req, 'oauth.client_created', {
+    resourceType: 'oauth_client', resourceId: id,
+    details: { client_id: clientId, name, redirect_uri: redirectUri },
+  });
+  bizEvent('dashboard.oauth_client_created', { dashboard_id: req.dashboard.id, client_id: clientId, actor: req.user.email });
+
+  // Return the secret exactly once — not stored, cannot be recovered.
+  res.status(201).json({ id, client_id: clientId, client_secret: rawSecret, name, redirect_uri: redirectUri,
+    _warning: 'Store client_secret securely — it will not be shown again.' });
+});
+
+// GET /dashboard/oauth/clients — list registered clients (secrets not returned).
+router.get('/oauth/clients', requirePermission('agent:read'), (req, res) => {
+  if ((process.env.OAUTH_ENABLED || 'false') !== 'true') {
+    return res.status(503).json({ error: 'oauth_disabled' });
+  }
+  // Clients are global (not dashboard-scoped) for now — any dashboard owner can see them.
+  // A future migration can add a dashboard_id FK if multi-tenant isolation is needed.
+  const rows = db.prepare(
+    `SELECT id, client_id, name, redirect_uri, created_at FROM oauth_clients ORDER BY created_at DESC`,
+  ).all();
+  res.json({ clients: rows });
+});
+
+// DELETE /dashboard/oauth/clients/:id — remove an OAuth client.
+router.delete('/oauth/clients/:id', requirePermission('agent:update'), (req, res) => {
+  if ((process.env.OAUTH_ENABLED || 'false') !== 'true') {
+    return res.status(503).json({ error: 'oauth_disabled' });
+  }
+  const result = db.prepare(`DELETE FROM oauth_clients WHERE id = ?`).run(req.params.id);
+  if (result.changes === 0) return res.status(404).json({ error: 'not_found' });
+  recordAuditFromReq(req, 'oauth.client_deleted', { resourceType: 'oauth_client', resourceId: req.params.id });
+  res.json({ ok: true });
+});
+
 // Attach internal helpers to the router so unit tests can exercise
 // them in isolation. Express routers are functions, so attaching
 // named properties is a standard, app.use-compatible pattern.

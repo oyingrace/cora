@@ -126,6 +126,9 @@ function resetDb() {
     'stellar_dead_letter',
     'unmatched_payments',
     'agent_wallets',
+    'oauth_clients',
+    'oauth_codes',
+    'oauth_tokens',
   ]) {
     try {
       db.prepare(`DELETE FROM ${tbl}`).run();

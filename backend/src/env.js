@@ -232,6 +232,12 @@ const EnvSchema = z
     // MCP HTTP endpoint. Off by default — flip to 'true' once a Cloudflare
     // Tunnel (or other public HTTPS URL) is in place and MCP_ENABLED is set.
     MCP_ENABLED: z.enum(['true', 'false']).optional().default('false'),
+
+    // OAuth 2.0 for the claude.ai connector. Off by default.
+    // Requires MCP_ENABLED=true and a public HTTPS CORA_BASE_URL.
+    OAUTH_ENABLED: z.enum(['true', 'false']).optional().default('false'),
+    // Access token TTL in hours. Default 1h.
+    OAUTH_TOKEN_TTL_HOURS: z.string().regex(/^\d+$/).optional().default('1'),
     // Max milliseconds purchase_vcc waits for card fulfillment before handing
     // the order_id back to the model. Default 90s (well inside any MCP timeout).
     MCP_PURCHASE_WAIT_MS: z.string().regex(/^\d+$/).optional().default('90000'),

@@ -961,9 +961,67 @@ applyMigration(30, () => {
   `);
 });
 
+// Migration 31: OAuth 2.0 support for claude.ai connector.
+//
+//   oauth_clients — one row per registered MCP connector application.
+//     client_id:          public identifier sent by the OAuth client
+//     client_secret_hash: SHA-256(raw_secret) — raw secret handed out once at
+//                         registration, never stored. Same pattern as sessions.
+//     redirect_uri:       exact URI the authorization code is sent to. Stored
+//                         verbatim and compared with strict equality at token
+//                         exchange time (RFC 6749 §4.1.3 requirement).
+//     name:               human label shown in the agent picker UI.
+//
+//   oauth_codes — short-lived (10-minute) authorization codes. Each code
+//     is redeemable exactly once; used_at is set atomically on exchange.
+//     Ties a Cora user + chosen agent to a pending token issuance.
+//
+//   oauth_tokens — access tokens issued after a successful code exchange.
+//     token_hash: SHA-256(raw_token) — raw token returned to the client once.
+//     Scoped to one user (user_id) and one agent (api_key_id).
+//     expires_at: short-lived (1 hour default; configurable via
+//                 OAUTH_TOKEN_TTL_HOURS env var).
+//     revoked_at: set on explicit revocation; checked alongside expires_at.
+applyMigration(31, () => {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS oauth_clients (
+      id                TEXT PRIMARY KEY,
+      client_id         TEXT NOT NULL UNIQUE,
+      client_secret_hash TEXT NOT NULL,
+      redirect_uri      TEXT NOT NULL,
+      name              TEXT NOT NULL,
+      created_at        TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS oauth_codes (
+      id          TEXT PRIMARY KEY,
+      client_id   TEXT NOT NULL,
+      user_id     TEXT NOT NULL,
+      api_key_id  TEXT NOT NULL,
+      code_hash   TEXT NOT NULL UNIQUE,
+      redirect_uri TEXT NOT NULL,
+      state       TEXT,
+      expires_at  TEXT NOT NULL,
+      used_at     TEXT,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS oauth_tokens (
+      id          TEXT PRIMARY KEY,
+      client_id   TEXT NOT NULL,
+      user_id     TEXT NOT NULL,
+      api_key_id  TEXT NOT NULL,
+      token_hash  TEXT NOT NULL UNIQUE,
+      expires_at  TEXT NOT NULL,
+      revoked_at  TEXT,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+});
+
 // EXPECTED_SCHEMA_VERSION must match the last `applyMigration(N)` call
 // above. Bump it in lock-step with any new migration.
-const EXPECTED_SCHEMA_VERSION = 30;
+const EXPECTED_SCHEMA_VERSION = 31;
 const actualVersion = getSchemaVersion();
 if (actualVersion > EXPECTED_SCHEMA_VERSION) {
   console.error(

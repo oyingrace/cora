@@ -703,6 +703,15 @@ if ((process.env.MPP_ENABLED || 'false') === 'true') {
   app.use('/v1', buildMppRouter());
 }
 
+// OAuth 2.0 endpoints — GET/POST /oauth/authorize, POST /oauth/token,
+// GET /oauth/userinfo. Gated by OAUTH_ENABLED=true.
+// Must be mounted BEFORE the /v1 auth chain (uses its own auth layer).
+if ((process.env.OAUTH_ENABLED || 'false') === 'true') {
+  const { router: oauthRouter } = require('./oauth/router');
+  app.use('/oauth', oauthRouter);
+  log('info', '[oauth] endpoints enabled at /oauth/authorize, /oauth/token');
+}
+
 // MCP HTTP endpoint — POST /mcp. Gated by MCP_ENABLED=true.
 // Mounted BEFORE the /v1 auth chain because /mcp has its own auth layer
 // (same X-Api-Key bcrypt path, but no MCP request should ever fall through
