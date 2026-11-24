@@ -30,5 +30,5 @@ npx @cora-agent/cora purchase --amount 25 --network testnet
 
 - API keys look like `cora_<hex>`.
 - Local API: `http://127.0.0.1:4200/v1`
-- MCP is not enabled in this build (`npx @cora-agent/cora mcp` exits until Phase 10).
+- MCP is available over HTTP at `POST /mcp` (opt-in: set `MCP_ENABLED=true`). The SDK stdio entry (`npx @cora-agent/cora mcp`) is not wired.
 - Prefer `phase` on order polls: `ready` means the card is available.

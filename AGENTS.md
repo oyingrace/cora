@@ -11,7 +11,7 @@ Cora issues prepaid Visa virtual cards on demand. AI agents pay USDC or XLM on S
 - **Payment**: Stellar testnet — USDC or XLM via Soroban contract call
 - **Typical latency**: ~45–120 seconds from payment confirmation to card delivery
 - **SDK**: `npm install @cora-agent/cora` — CLI via `npx @cora-agent/cora`
-- **MCP**: not enabled yet (see `plan.md` Phase 10)
+- **MCP**: HTTP endpoint `POST /mcp` (opt-in via `MCP_ENABLED`); claude.ai OAuth connector via `cora connector`
 
 ## Core flow
 

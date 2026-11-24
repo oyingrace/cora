@@ -238,8 +238,8 @@ export default function HomePage() {
             margin: '0 0 1rem',
           }}
         >
-          Cora is designed so assistants like Claude can call wallets, budgets, and card purchases
-          through Model Context Protocol tools — alongside the HTTP API and CLI.
+          Assistants like Claude can call wallets, budgets, and card purchases through Model Context
+          Protocol tools — alongside the HTTP API and CLI.
         </p>
         <p
           style={{
@@ -250,8 +250,11 @@ export default function HomePage() {
             lineHeight: 1.5,
           }}
         >
-          MCP wiring ships after the core platform is stable on testnet. Use the dashboard and{' '}
-          <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em' }}>npx @cora-agent/cora</code> today.
+          MCP is live at{' '}
+          <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em' }}>POST /mcp</code> — set{' '}
+          <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em' }}>MCP_ENABLED=true</code>{' '}
+          and register the claude.ai connector with{' '}
+          <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9em' }}>cora connector</code>.
         </p>
       </section>
     </>

@@ -13,7 +13,7 @@ Default network during development: **Stellar testnet**.
 
 - HTTP API (`/v1`)
 - TypeScript SDK + CLI (`npx @cora-agent/cora`)
-- MCP (planned — not enabled in this build)
+- MCP over HTTP (`POST /mcp`, opt-in via `MCP_ENABLED`; claude.ai OAuth connector)
 
 ## Quick path
 
