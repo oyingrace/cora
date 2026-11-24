@@ -180,8 +180,7 @@ cd .. && npm install && npm run dev:web
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for components, the payment flow, and
 the order state machine. Product positioning lives in
-[docs/project-description.md](./docs/project-description.md); the phased build
-sequence and port map are in [plan.md](./plan.md).
+[docs/project-description.md](./docs/project-description.md).
 
 ---
 
