@@ -233,6 +233,10 @@ const EnvSchema = z
     // Tunnel (or other public HTTPS URL) is in place and MCP_ENABLED is set.
     MCP_ENABLED: z.enum(['true', 'false']).optional().default('false'),
 
+    // Dev-token endpoint — loopback-only session minting for the CLI.
+    // Safe even in production: the endpoint rejects all non-loopback IPs.
+    CORA_DEV_TOKEN_ENABLED: z.enum(['true', 'false']).optional().default('false'),
+
     // OAuth 2.0 for the claude.ai connector. Off by default.
     // Requires MCP_ENABLED=true and a public HTTPS CORA_BASE_URL.
     OAUTH_ENABLED: z.enum(['true', 'false']).optional().default('false'),

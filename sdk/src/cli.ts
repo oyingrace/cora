@@ -48,6 +48,7 @@ Usage:
   cora wallet balance            Print XLM + USDC balances from Horizon
   cora wallet trustline          Open the USDC trustline (required before
                                      the wallet can receive USDC)
+  cora connector                 Register the claude.ai MCP connector (run once)
   cora mcp                       Start the MCP server over stdio (default)
   cora version                   Print the SDK version
   cora --help                    Show this message
@@ -81,6 +82,11 @@ Onboarding guide for agents: https://cora.dev/skill.md
   if (cmd === 'wallet') {
     const { walletCommand } = await import('./commands/wallet');
     return walletCommand(rest);
+  }
+
+  if (cmd === 'connector') {
+    const { connectorCommand } = await import('./commands/connector');
+    return connectorCommand(rest);
   }
 
   if (cmd === 'mcp') {

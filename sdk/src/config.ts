@@ -198,7 +198,7 @@ export function assertSafeBaseUrl(url: string, opts: { context?: string } = {}):
   }
   if (parsed.protocol !== 'https:') {
     if (isLocalDevHost(parsed.hostname) || process.env.CORA_ALLOW_INSECURE_BASE_URL === '1') {
-      return parsed.toString();
+      return parsed.toString().replace(/\/$/, '');
     }
     throw new Error(
       `Refusing to use non-HTTPS base URL (${url})${opts.context ? ` for ${opts.context}` : ''}. ` +
@@ -206,7 +206,9 @@ export function assertSafeBaseUrl(url: string, opts: { context?: string } = {}):
         `CORA_ALLOW_INSECURE_BASE_URL=1 to override.`,
     );
   }
-  return parsed.toString();
+  // Strip trailing slash that URL.toString() always adds so that
+  // `${apiBase}/path` doesn't produce a double slash
+  return parsed.toString().replace(/\/$/, '');
 }
 
 /**

@@ -80,8 +80,84 @@ const tokenLimiter = rateLimit({
 });
 
 // ── GET /oauth/authorize ──────────────────────────────────────────────────────
+// Custom auth middleware that shows a sign-in page instead of returning JSON
+// when the user is not authenticated. This is required for OAuth flows where
+// the client (claude.ai) expects HTML, not JSON errors.
 
-router.get('/authorize', authorizeLimiter, requireAuth, (req, res) => {
+function requireAuthOrSignInPage(req, res, next) {
+  // Try to authenticate using requireAuth logic
+  const crypto = require('crypto');
+  function hashToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+  
+  const rawAuth = typeof req.headers?.authorization === 'string' ? req.headers.authorization : null;
+  if (!rawAuth || !rawAuth.toLowerCase().startsWith('bearer ')) {
+    // No auth header - show sign-in page
+    return showSignInPage(req, res);
+  }
+  
+  const token = rawAuth.slice(7).trim();
+  if (!token) {
+    return showSignInPage(req, res);
+  }
+  
+  const row = db.prepare(`
+    SELECT u.id, u.email, u.role
+    FROM sessions s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.token_hash = ?
+      AND datetime(s.expires_at) > datetime('now')
+  `).get(hashToken(token));
+  
+  if (!row) {
+    return showSignInPage(req, res);
+  }
+  
+  const { isPlatformOwner } = require('../lib/platform');
+  req.user = { ...row, is_platform_owner: isPlatformOwner(row.email) };
+  next();
+}
+
+function showSignInPage(req, res) {
+  const { client_id, redirect_uri, state, response_type } = req.query;
+  const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  
+  // Build the return URL to continue OAuth flow after sign-in
+  const returnUrl = `/oauth/authorize?${new URLSearchParams(req.query).toString()}`;
+  // Use CORA_DASHBOARD_URL if set, otherwise fall back to CORA_BASE_URL or localhost
+  const dashboardUrl = process.env.CORA_DASHBOARD_URL || process.env.CORA_BASE_URL || `http://localhost:${process.env.PORT || 4200}`;
+  
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign In — Cora OAuth</title>
+<style>*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+max-width:420px;margin:60px auto;padding:0 20px;color:#111;background:#f9f9f9}
+h1{font-size:1.5rem;font-weight:600;margin-bottom:8px}p{color:#666;margin-top:0;line-height:1.5}
+.card{border:1px solid #e5e5e5;border-radius:12px;padding:24px;margin:20px 0;background:#fff}
+.info{background:#f0f7ff;border:1px solid #d0e7ff;padding:16px;border-radius:8px;margin:16px 0}
+.info strong{color:#0066cc}
+a{color:#0066cc;text-decoration:none}a:hover{text-decoration:underline}
+</style></head><body>
+<h1>Sign In Required</h1>
+<p>To authorize this application, you need to sign in to your Cora dashboard first.</p>
+<div class="card info">
+  <strong>Next steps:</strong>
+  <ol style="margin:8px 0 0;padding-left:20px">
+    <li>Open <a href="${esc(dashboardUrl)}" target="_blank">${esc(dashboardUrl)}</a> in a new tab</li>
+    <li>Sign in with your Cora dashboard account</li>
+    <li>Return to this tab and <a href="${esc(returnUrl)}">click here to continue</a></li>
+  </ol>
+</div>
+<p style="color:#888;font-size:0.875rem;margin-top:32px">
+  Attempting to authorize: ${esc(client_id || 'unknown client')}
+</p>
+</body></html>`);
+}
+
+router.get('/authorize', authorizeLimiter, requireAuthOrSignInPage, (req, res) => {
   const { client_id, redirect_uri, state, response_type } = req.query;
 
   if (response_type !== 'code')

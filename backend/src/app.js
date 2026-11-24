@@ -127,14 +127,23 @@ app.set('trust proxy', 1);
 // forwarding HTTP) would otherwise ship API keys over the wire unencrypted.
 // Honors `X-Forwarded-Proto` because `trust proxy` is set above, so a TLS
 // terminator in front (Cloudflare, nginx, ALB) works correctly.
+//
+// Exemption: loopback addresses (127.0.0.1, ::1) are allowed over HTTP so
+// local CLI tools can hit dev-only endpoints like /auth/dev-token without HTTPS.
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
-    const proto = req.headers['x-forwarded-proto'] || req.protocol;
-    if (proto !== 'https') {
-      return res.status(426).json({
-        error: 'https_required',
-        message: 'This endpoint requires HTTPS. Retry over https://',
-      });
+    // Check if request is from loopback
+    const socketAddr = req.socket?.remoteAddress || '';
+    const isLoopback = socketAddr === '127.0.0.1' || socketAddr === '::1' || socketAddr === '::ffff:127.0.0.1';
+    
+    if (!isLoopback) {
+      const proto = req.headers['x-forwarded-proto'] || req.protocol;
+      if (proto !== 'https') {
+        return res.status(426).json({
+          error: 'https_required',
+          message: 'This endpoint requires HTTPS. Retry over https://',
+        });
+      }
     }
     next();
   });
@@ -236,6 +245,55 @@ const adminLimiter = rateLimit({
 // sharing a NAT'd network while doing nothing brute-forceable. The
 // limiters now live inside the auth router so only the mutating
 // endpoints (minting codes, verifying codes) get throttled.
+
+// POST /auth/dev-token — loopback-only endpoint that mints a real session
+// token for an existing user without requiring SMTP/OTP. Useful for the
+// `cora connector` CLI command when SMTP is not configured.
+//
+// Security: only accepts requests from 127.0.0.1 / ::1. Refused in
+// production when CORA_BASE_URL points at a non-local host (the env
+// guard already blocks NODE_ENV=production on a local URL, so this
+// only fires in development). Belt-and-braces: also blocked when
+// NODE_ENV=production, full stop.
+app.post('/auth/dev-token', (req, res) => {
+  // This endpoint is disabled unless explicitly opted into via
+  // CORA_DEV_TOKEN_ENABLED=true. The loopback IP check is the primary
+  // security gate — it makes the endpoint unreachable over the public
+  // tunnel regardless of env. CORA_DEV_TOKEN_ENABLED just prevents
+  // accidental exposure on deployments that never set it.
+  if ((process.env.CORA_DEV_TOKEN_ENABLED || 'false') !== 'true') {
+    return res.status(404).json({ error: 'not_found' });
+  }
+  // Block any request not coming from loopback — the tunnel forwards
+  // X-Forwarded-For but req.ip resolves to the tunnel's local address.
+  // We check the actual socket address, not the forwarded header.
+  const socketAddr = req.socket?.remoteAddress || '';
+  const isLoopback = socketAddr === '127.0.0.1' || socketAddr === '::1' || socketAddr === '::ffff:127.0.0.1';
+  if (!isLoopback) {
+    return res.status(403).json({ error: 'forbidden', message: 'dev-token is only available from localhost' });
+  }
+
+  const { email } = req.body || {};
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'invalid_request', message: 'email is required' });
+  }
+
+  const user = /** @type {any} */ (db.prepare(`SELECT * FROM users WHERE email = ?`).get(email.trim().toLowerCase()));
+  if (!user) {
+    return res.status(404).json({ error: 'user_not_found', message: `No user with email ${email}. Sign in to the dashboard first to create the account.` });
+  }
+
+  const crypto = require('crypto');
+  const { v4: uuidv4 } = require('uuid');
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  db.prepare(`INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)`).run(
+    uuidv4(), user.id, tokenHash, expiresAt,
+  );
+
+  return res.json({ token: rawToken, email: user.email, role: user.role, expires_at: expiresAt });
+});
 
 // Audit C-9: API version endpoint for deploy-time compatibility checks.
 const versionLimiter = rateLimit({
@@ -706,10 +764,28 @@ if ((process.env.MPP_ENABLED || 'false') === 'true') {
 // OAuth 2.0 endpoints — GET/POST /oauth/authorize, POST /oauth/token,
 // GET /oauth/userinfo. Gated by OAUTH_ENABLED=true.
 // Must be mounted BEFORE the /v1 auth chain (uses its own auth layer).
+//
+// Claude.ai MCP connector expects OAuth endpoints at the root level
+// (/authorize, /token), not nested under /oauth. Create aliases.
 if ((process.env.OAUTH_ENABLED || 'false') === 'true') {
   const { router: oauthRouter } = require('./oauth/router');
   app.use('/oauth', oauthRouter);
-  log('info', '[oauth] endpoints enabled at /oauth/authorize, /oauth/token');
+  
+  // Claude.ai expects /authorize and /token at root, so redirect there
+  app.get('/authorize', (req, res) => {
+    const qs = new URLSearchParams(req.query).toString();
+    res.redirect(`/oauth/authorize${qs ? `?${qs}` : ''}`);
+  });
+  app.post('/authorize', (req, res) => {
+    req.url = '/oauth/authorize';
+    oauthRouter(req, res, () => {});
+  });
+  app.post('/token', (req, res) => {
+    req.url = '/oauth/token';
+    oauthRouter(req, res, () => {});
+  });
+  
+  log('info', '[oauth] endpoints enabled at /oauth/authorize, /oauth/token (and root /authorize, /token)');
 }
 
 // MCP HTTP endpoint — POST /mcp. Gated by MCP_ENABLED=true.
