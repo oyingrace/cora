@@ -36,6 +36,16 @@ const HSTS = 'max-age=63072000; includeSubDomains; preload';
 const isDev = process.env.NODE_ENV === 'development';
 
 const nextConfig: NextConfig = {
+  // Allow Cloudflare tunnel URLs for HMR (hot module replacement) in dev.
+  // Set ALLOWED_DEV_ORIGINS env var with comma-separated domains, or
+  // defaults to allowing all *.trycloudflare.com subdomains.
+  ...(isDev
+    ? {
+        allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS
+          ? process.env.ALLOWED_DEV_ORIGINS.split(',').map((s) => s.trim())
+          : ['*.trycloudflare.com'],
+      }
+    : {}),
   turbopack: {
     root: path.resolve(__dirname, '..'),
   },
