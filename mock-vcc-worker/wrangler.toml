@@ -1,0 +1,26 @@
+name = "mock-vcc"
+main = "src/index.ts"
+compatibility_date = "2024-11-25"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace for storing tokens and jobs
+[[kv_namespaces]]
+binding = "MOCK_VCC_KV"
+id = "7b160e67767d4a79a7d2fba5d27c1448"
+preview_id = "7b160e67767d4a79a7d2fba5d27c1448"
+
+# Environment variables
+[vars]
+INVOICE_XLM = "0.5"
+CALLBACK_DELAY_MS = "400"
+STELLAR_NETWORK = "testnet"
+
+# Observability for debugging
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 1

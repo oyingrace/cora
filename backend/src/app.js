@@ -804,6 +804,67 @@ if ((process.env.OAUTH_ENABLED || 'false') === 'true') {
   log('info', '[oauth] endpoints enabled at /oauth/authorize, /oauth/token (and root /authorize, /token)');
 }
 
+// ── RFC 8414/9470: OAuth Discovery Endpoints (for MCP clients) ──────────────────
+// These MUST be at root level for client auto-discovery, not under /mcp
+if ((process.env.OAUTH_ENABLED || 'false') === 'true' && (process.env.MCP_ENABLED || 'false') === 'true') {
+  // RFC 8414: OAuth 2.0 Authorization Server Metadata
+  app.get('/.well-known/oauth-authorization-server', (req, res) => {
+    const baseUrl = process.env.CORA_BASE_URL || 'http://localhost:4200';
+
+    // Extract mcp_slug from Referer/Origin for slug-aware metadata
+    const referer = req.headers.referer || req.headers.origin;
+    let mcpSlug = null;
+    if (referer) {
+      const match = referer.match(/\/mcp\/([^\/\?]+)/);
+      if (match) mcpSlug = match[1];
+    }
+
+    const slugParam = mcpSlug ? `?mcp_slug=${encodeURIComponent(mcpSlug)}` : '';
+
+    res.json({
+      issuer: baseUrl,
+      authorization_endpoint: `${baseUrl}/oauth/authorize${slugParam}`,
+      token_endpoint: `${baseUrl}/oauth/token`,
+      registration_endpoint: `${baseUrl}/oauth/register${slugParam}`,
+      response_types_supported: ['code'],
+      grant_types_supported: ['authorization_code'],
+      code_challenge_methods_supported: ['S256'],
+      scopes_supported: ['mcp:tools'],
+      token_endpoint_auth_methods_supported: ['client_secret_post'],
+    });
+  });
+
+  // RFC 8414: Path-based discovery catch-all
+  app.get('/.well-known/oauth-authorization-server/*path', (req, res) => {
+    res.redirect('/.well-known/oauth-authorization-server');
+  });
+
+  // RFC 9470: OAuth 2.0 Protected Resource Metadata
+  app.get('/.well-known/oauth-protected-resource', (req, res) => {
+    const baseUrl = process.env.CORA_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const mcpUrl = `${baseUrl}/mcp`;
+
+    // Extract mcp_slug from Referer/Origin for slug-aware metadata
+    const referer = req.headers.referer || req.headers.origin;
+    let mcpSlug = null;
+    if (referer) {
+      const match = referer.match(/\/mcp\/([^\/\?]+)/);
+      if (match) mcpSlug = match[1];
+    }
+
+    const authServer = mcpSlug ? `${baseUrl}/mcp/${mcpSlug}` : baseUrl;
+
+    res.json({
+      resource: mcpUrl,
+      authorization_servers: [authServer],
+      scopes_supported: ['mcp:tools'],
+      bearer_methods_supported: ['header'],
+    });
+  });
+
+  log('info', '[oauth] discovery endpoints enabled at /.well-known/oauth-authorization-server and /.well-known/oauth-protected-resource');
+}
+
 // MCP HTTP endpoint — POST /mcp. Gated by MCP_ENABLED=true.
 // Mounted BEFORE the /v1 auth chain because /mcp has its own auth layer
 // (same X-Api-Key bcrypt path, but no MCP request should ever fall through

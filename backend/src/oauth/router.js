@@ -79,6 +79,181 @@ const tokenLimiter = rateLimit({
   handler: (_, res) => res.status(429).json({ error: 'too_many_requests' }),
 });
 
+const registerLimiter = rateLimit({
+  windowMs: 60 * 1000, limit: 10,
+  keyGenerator: (/** @type {any} */ req) => ipKeyGenerator(req),
+  standardHeaders: 'draft-7', legacyHeaders: false,
+  handler: (_, res) => res.status(429).json({ error: 'too_many_requests' }),
+});
+
+// ── CORS helper for dynamic registration ──────────────────────────────────────
+
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
+// ── POST /oauth/register ──────────────────────────────────────────────────────
+// OAuth 2.0 Dynamic Client Registration (RFC 7591)
+
+router.post('/register', registerLimiter, async (req, res) => {
+  if ((process.env.OAUTH_ENABLED || 'false') !== 'true') {
+    return res.status(503).json({ error: 'oauth_disabled', error_description: 'OAuth is not enabled' }, corsHeaders());
+  }
+
+  try {
+    const body = req.body || {};
+    const { searchParams } = new URL(req.url, `https://${req.get('host')}`);
+
+    // Get mcp_slug from query param (set by virtual auth server metadata)
+    let mcpSlug = searchParams.get('mcp_slug');
+
+    // If no slug in query param, try to extract from Referer/Origin header
+    // MCP SDK might include the MCP server URL in the Referer
+    if (!mcpSlug) {
+      const referer = req.headers.referer || req.headers.origin;
+      if (referer) {
+        const match = referer.match(/\/mcp\/([^\/\?]+)/);
+        if (match) {
+          mcpSlug = match[1];
+          bizEvent('oauth.register.mcp_slug_extracted', { mcp_slug: mcpSlug, referer });
+        }
+      }
+    }
+
+    const {
+      redirect_uris: redirectUris,
+      client_name: clientName,
+      client_uri: clientUri,
+      logo_uri: logoUri,
+      scope,
+    } = body;
+
+    // Validate redirect_uris
+    if (!redirectUris || !Array.isArray(redirectUris) || redirectUris.length === 0) {
+      return res.status(400).json({
+        error: 'invalid_redirect_uri',
+        error_description: 'redirect_uris is required and must be a non-empty array',
+      }, corsHeaders());
+    }
+
+    // Validate each redirect URI
+    for (const uri of redirectUris) {
+      try {
+        new URL(uri);
+      } catch {
+        return res.status(400).json({
+          error: 'invalid_redirect_uri',
+          error_description: `Invalid redirect URI: ${uri}`,
+        }, corsHeaders());
+      }
+    }
+
+    // Parse requested scopes (default to mcp:tools)
+    const requestedScopes = scope
+      ? scope.split(' ').filter(Boolean)
+      : ['mcp:tools'];
+
+    // Normalize redirect URIs for comparison (sorted, lowercase)
+    const normalizedUris = [...redirectUris].map((u) => u.toLowerCase()).sort();
+
+    // Check for existing client with matching redirect_uris
+    const allClients = /** @type {any[]} */ (db.prepare(`SELECT * FROM oauth_clients WHERE is_active = 1`).all());
+    const existingClient = allClients.find((client) => {
+      if (!client.redirect_uris) return false;
+      let clientUris;
+      try { clientUris = JSON.parse(client.redirect_uris); } catch { return false; }
+      if (!Array.isArray(clientUris)) return false;
+      const clientNormalizedUris = [...clientUris].map((u) => u.toLowerCase()).sort();
+      return JSON.stringify(clientNormalizedUris) === JSON.stringify(normalizedUris);
+    });
+
+    // Generate new secret (used for both new and existing clients)
+    const clientSecret = crypto.randomBytes(32).toString('base64url');
+    const secretHash = sha256(clientSecret);
+
+    let clientId;
+
+    if (existingClient) {
+      // Update existing client with new secret and scopes
+      clientId = existingClient.client_id;
+      db.prepare(
+        `UPDATE oauth_clients SET client_secret_hash = ?, name = ?, logo_url = ?, allowed_scopes = ?, mcp_slug = ? WHERE client_id = ?`
+      ).run(secretHash, clientName || existingClient.name, logoUri || existingClient.logo_url, requestedScopes.join(' '), mcpSlug || existingClient.mcp_slug, clientId);
+
+      bizEvent('oauth.client_refreshed', {
+        client_id: clientId,
+        name: clientName || existingClient.name,
+        redirect_uris: redirectUris,
+        scopes: requestedScopes,
+        mcp_slug: mcpSlug || existingClient.mcp_slug,
+      });
+    } else {
+      // Create new client
+      clientId = `cora_oauth_${crypto.randomBytes(16).toString('hex')}`;
+      // Use first redirect_uri for legacy redirect_uri column (NOT NULL constraint)
+      const primaryRedirectUri = redirectUris[0];
+      db.prepare(
+        `INSERT INTO oauth_clients (client_id, client_secret_hash, name, description, logo_url, redirect_uri, redirect_uris, allowed_scopes, mcp_slug, is_active)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`
+      ).run(
+        clientId,
+        secretHash,
+        clientName || 'MCP Client',
+        clientUri ? `Client from ${clientUri}` : 'Dynamically registered MCP client',
+        logoUri || null,
+        primaryRedirectUri,
+        JSON.stringify(redirectUris),
+        requestedScopes.join(' '),
+        mcpSlug || null
+      );
+
+      bizEvent('oauth.client_registered', {
+        client_id: clientId,
+        name: clientName || 'MCP Client',
+        redirect_uris: redirectUris,
+        scopes: requestedScopes,
+        mcp_slug: mcpSlug,
+      });
+    }
+
+    // Return client credentials (RFC 7591 response)
+    // Note: For existing clients, we return 200 instead of 201
+    const isNew = !existingClient;
+    res.set(corsHeaders());
+    return res.status(isNew ? 201 : 200).json({
+      client_id: clientId,
+      client_secret: clientSecret,
+      client_id_issued_at: Math.floor(Date.now() / 1000),
+      client_secret_expires_at: 0, // Never expires
+      redirect_uris: redirectUris,
+      client_name: clientName || 'MCP Client',
+      client_uri: clientUri,
+      logo_uri: logoUri,
+      scope: requestedScopes.join(' '),
+      token_endpoint_auth_method: 'client_secret_post',
+      grant_types: ['authorization_code'],
+      response_types: ['code'],
+    });
+
+  } catch (error) {
+    console.error('[POST /oauth/register] Error:', error);
+    res.set(corsHeaders());
+    return res.status(500).json({
+      error: 'server_error',
+      error_description: 'Failed to register client',
+    });
+  }
+});
+
+router.options('/register', (req, res) => {
+  res.set(corsHeaders());
+  res.status(204).end();
+});
+
 // ── GET /oauth/authorize ──────────────────────────────────────────────────────
 // Custom auth middleware that shows a sign-in page instead of returning JSON
 // when the user is not authenticated. This is required for OAuth flows where
@@ -169,7 +344,7 @@ a{color:#0066cc;text-decoration:none}a:hover{text-decoration:underline}
 }
 
 router.get('/authorize', authorizeLimiter, requireAuthOrSignInPage, (req, res) => {
-  const { client_id, redirect_uri, state, response_type, code_challenge, code_challenge_method } = req.query;
+  const { client_id, redirect_uri, state, response_type, code_challenge, code_challenge_method, mcp_slug } = req.query;
 
   if (response_type !== 'code')
     return res.status(400).json({ error: 'unsupported_response_type' });
@@ -214,11 +389,12 @@ router.get('/authorize', authorizeLimiter, requireAuthOrSignInPage, (req, res) =
                                   : '<small style="color:#888">○ no wallet</small>'}
           </span></label>`).join('');
 
-  // Pass PKCE params through to the form
+  // Pass PKCE params and mcp_slug through to the form
   const pkceFields = (code_challenge
     ? `<input type="hidden" name="code_challenge" value="${esc(code_challenge)}">\n` +
       `<input type="hidden" name="code_challenge_method" value="${esc(code_challenge_method || 'S256')}">`
-    : '');
+    : '') +
+    (mcp_slug ? `<input type="hidden" name="mcp_slug" value="${esc(mcp_slug)}">` : '');
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html>
@@ -250,7 +426,7 @@ font-size:1rem;cursor:pointer;margin-top:16px}button:hover{background:#333}
 // ── POST /oauth/authorize ─────────────────────────────────────────────────────
 
 router.post('/authorize', authorizeLimiter, requireAuth, (req, res) => {
-  const { client_id, redirect_uri, state, api_key_id, code_challenge, code_challenge_method } = req.body || {};
+  const { client_id, redirect_uri, state, api_key_id, code_challenge, code_challenge_method, mcp_slug } = req.body || {};
   const user = /** @type {any} */ (req).user;
 
   if (!client_id || !redirect_uri || !state || !api_key_id)
@@ -274,13 +450,15 @@ router.post('/authorize', authorizeLimiter, requireAuth, (req, res) => {
   const pkceMethod = pkceChallenge && code_challenge_method && typeof code_challenge_method === 'string'
     ? code_challenge_method
     : null;
+  // Store mcp_slug if provided (for multi-tenant MCP support)
+  const storedMcpSlug = mcp_slug && typeof mcp_slug === 'string' ? mcp_slug : null;
 
   const rawCode = generateToken('coauth_');
   const expires = new Date(Date.now() + CODE_TTL_MINUTES * 60_000).toISOString();
   db.prepare(
-    `INSERT INTO oauth_codes (id, client_id, user_id, api_key_id, code_hash, redirect_uri, state, expires_at, code_challenge, code_challenge_method)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(uuidv4(), client_id, user.id, api_key_id, sha256(rawCode), redirect_uri, state, expires, pkceChallenge, pkceMethod);
+    `INSERT INTO oauth_codes (id, client_id, user_id, api_key_id, code_hash, redirect_uri, state, expires_at, code_challenge, code_challenge_method, mcp_slug)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(uuidv4(), client_id, user.id, api_key_id, sha256(rawCode), redirect_uri, state, expires, pkceChallenge, pkceMethod, storedMcpSlug);
 
   bizEvent('oauth.code_issued', { client_id, user_id: user.id, api_key_id });
 
@@ -344,12 +522,14 @@ router.post('/token', tokenLimiter, (req, res) => {
 
   const rawToken = generateToken('cora_mcp_');
   const expires = new Date(Date.now() + TOKEN_TTL_HOURS * 3_600_000).toISOString();
-  db.prepare(
-    `INSERT INTO oauth_tokens (id, client_id, user_id, api_key_id, token_hash, expires_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-  ).run(uuidv4(), client_id, result.user_id, result.api_key_id, sha256(rawToken), expires);
+  const tokenMcpSlug = result.mcp_slug || null;
 
-  bizEvent('oauth.token_issued', { client_id, user_id: result.user_id, api_key_id: result.api_key_id });
+  db.prepare(
+    `INSERT INTO oauth_tokens (id, client_id, user_id, api_key_id, token_hash, expires_at, mcp_slug)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  ).run(uuidv4(), client_id, result.user_id, result.api_key_id, sha256(rawToken), expires, tokenMcpSlug);
+
+  bizEvent('oauth.token_issued', { client_id, user_id: result.user_id, api_key_id: result.api_key_id, mcp_slug: result.mcp_slug });
 
   return res.json({
     access_token: rawToken,
