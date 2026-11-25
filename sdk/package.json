@@ -51,7 +51,7 @@
     "type": "git",
     "url": "https://github.com/oyingrace/cora"
   },
-  "homepage": "https://cora.dev",
+  "homepage": "https://dashboard.agent-cora.fs.kg",
   "publishConfig": {
     "access": "public"
   },

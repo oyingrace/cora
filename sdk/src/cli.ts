@@ -56,8 +56,8 @@ Usage:
 All the 'purchase' and 'wallet' subcommands read ~/.cora/config.json
 (written by 'cora onboard') so you don't need to pass an api key.
 
-Docs: https://cora.dev/docs
-Onboarding guide for agents: https://cora.dev/skill.md
+Dashboard: https://dashboard.agent-cora.fs.kg
+npm: https://www.npmjs.com/package/@cora-agent/cora
 `);
     return 0;
   }

@@ -214,7 +214,7 @@ export async function onboardCommand(argv: string[]): Promise<number> {
     if (typeof data.api_key !== 'string' || !data.api_key) {
       process.stderr.write(
         'error: claim succeeded but the response is missing api_key — aborting.\n' +
-          'This is a backend bug. Report it to api@cora.dev with the response.\n',
+          'This is a backend bug. Report it with the response.\n',
       );
       return 1;
     }
@@ -236,7 +236,7 @@ export async function onboardCommand(argv: string[]): Promise<number> {
     }
     if (typeof data.api_key_id !== 'string' || !data.api_key_id) {
       process.stderr.write(
-        'error: claim response missing api_key_id — aborting. Report to api@cora.dev.\n',
+        'error: claim response missing api_key_id — aborting.\n',
       );
       return 1;
     }

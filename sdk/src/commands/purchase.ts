@@ -325,7 +325,7 @@ export async function purchaseCommand(argv: string[]): Promise<number> {
       `error: no cora config found at ~/.cora/config.json
 
 Run 'cora onboard --claim <code>' first to set up credentials.
-Your operator can mint a claim code from https://cora.dev/dashboard.
+Your operator can mint a claim code from the dashboard.
 `,
     );
     return 1;

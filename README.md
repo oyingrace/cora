@@ -117,9 +117,9 @@ Agent → GET /v1/orders/:id (phase=ready) → card credentials
 
 ## Links
 
-- [cora.dev](https://cora.dev) — Dashboard and docs
-- [cora.dev/docs](https://cora.dev/docs) — Full API reference
-- [cora.dev/skill.md](https://cora.dev/skill.md) — Agent onboarding brief
+- [dashboard.agent-cora.fs.kg](https://dashboard.agent-cora.fs.kg) — Dashboard
+- [github.com/oyingrace/cora](https://github.com/oyingrace/cora) — Source
+- [npm: @cora-agent/cora](https://www.npmjs.com/package/@cora-agent/cora) — npm package
 
 ## License
 

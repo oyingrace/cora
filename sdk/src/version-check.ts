@@ -111,7 +111,7 @@ function printWarning(local: string, latest: string): void {
     '',
     `⚠  cora ${local} is out of date — ${latest} is available on npm.`,
     `   Upgrade: npx -y ${PACKAGE_NAME}@latest <command>  |  npm i -g ${PACKAGE_NAME}@latest`,
-    `   Release notes: https://cora.dev/changelog`,
+    `   npm: https://www.npmjs.com/package/@cora-agent/cora`,
     '',
   ].join('\n');
   try {

@@ -1,6 +1,6 @@
 # Buy VCC
 
-Purchase a prepaid Visa virtual card via cora.dev.
+Purchase a prepaid Visa virtual card via Cora.
 
 ## Usage
 
@@ -11,7 +11,7 @@ Purchase a prepaid Visa virtual card via cora.dev.
 When invoked:
 
 1. Check if `CORA_API_KEY` and `OWS_WALLET_NAME` are set. If not, explain:
-   - `CORA_API_KEY` — get one at cora.dev
+   - `CORA_API_KEY` — get one from the dashboard
    - `OWS_WALLET_NAME` — the OWS wallet identifier; run `setup_wallet` (MCP) or:
      ```typescript
      import { createOWSWallet } from '@cora-agent/cora';
@@ -77,7 +77,7 @@ When invoked:
 
 ## Environment variables needed
 
-- `CORA_API_KEY` — your cora API key (get one at cora.dev)
+- `CORA_API_KEY` — your cora API key (get one from the dashboard)
 - `OWS_WALLET_NAME` — OWS wallet identifier (must be funded with USDC or XLM)
 - `OWS_WALLET_PASSPHRASE` — wallet encryption passphrase (optional)
 - `OWS_VAULT_PATH` — vault file path (optional, default: `~/.ows/vault`)
