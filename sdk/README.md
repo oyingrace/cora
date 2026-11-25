@@ -1,97 +1,91 @@
-# cora
+# @cora-agent/cora
 
-Virtual Visa cards for AI agents — pay with USDC or XLM on Stellar, get a card number, CVV, and expiry in ~60 seconds.
+TypeScript SDK and CLI for purchasing prepaid Visa virtual cards via Stellar. AI agents pay USDC or XLM through a Soroban smart contract and receive card details (number, CVV, expiry) in ~60 seconds.
 
-[cora.dev](https://cora.dev) issues prepaid Visa virtual cards on demand. This SDK lets AI agents create an order, pay the cora Soroban receiver contract on Stellar, and receive card details programmatically — all in one call.
+## Features
 
-## Install
+- **One-Shot Purchase** - `purchaseCardOWS()` handles order creation, Soroban payment, and card delivery in a single call
+- **OWS Wallet** - Encrypted on-disk wallet via `@ctx.com/stellar-ows-core` native bindings
+- **Dual Asset Support** - Pay with USDC or XLM; auto-picks based on wallet balance
+- **MCP Server** - Stdio-based Model Context Protocol server for Claude Desktop, Cursor, and other MCP clients
+- **CLI** - Full onboarding and purchase flow from the command line
+- **SSE Streaming** - Real-time order status via Server-Sent Events (polling fallback included)
+
+## Environment Setup
+
+| Variable | Description |
+|----------|-------------|
+| `CORA_API_KEY` | API key from cora dashboard (`cora_...`) |
+| `CORA_API_URL` | API base URL (default: `http://127.0.0.1:4200/v1`) |
+| `STELLAR_NETWORK` | `testnet` or `mainnet` (default: `testnet`) |
+| `CORA_CONFIG_DIR` | Config directory (default: `~/.cora`) |
+
+## Installation
 
 ```bash
 npm install @cora-agent/cora
 ```
 
-Requires Node.js 18 or newer (the SDK uses native `fetch`, `ReadableStream`, and `WebCrypto`). Supported platforms via the bundled `@ctx.com/stellar-ows-core` native wallet bindings: macOS (arm64 + x64), Linux (arm64 + x64). Windows is not currently supported.
+Requires Node.js 18+. Supported platforms: macOS (arm64 + x64), Linux (arm64 + x64).
 
-### A note on `npm audit`
+## Running
 
-You'll see 3 critical advisories on `axios <= 1.14.0` after installing. They come from `@stellar/stellar-sdk`, which hard-pins an older axios version that we can't override from inside this package. The SDK's own HTTP calls only talk to hardcoded Stellar RPC / Horizon endpoints, so neither advisory (NO_PROXY SSRF, header-injection metadata exfil) is reachable through cora code — it's noise for our use, but noise you should still silence at your own project root.
+### CLI Commands
 
-Fix in your own `package.json`:
+```bash
+# Onboard a new agent with a claim code
+cora onboard --claim <code> --network testnet --api-base http://127.0.0.1:4200/v1
 
-```json
-{
-  "overrides": {
-    "axios": "^1.15.0"
-  }
-}
+# Purchase a card
+cora purchase --amount 25 --network testnet
+
+# Wallet operations
+cora wallet address            # Print Stellar address
+cora wallet balance            # Print XLM + USDC balances
+cora wallet trustline          # Open USDC trustline
+
+# MCP server (default when no subcommand)
+cora mcp
+
+# Claude.ai OAuth connector registration
+cora connector
+
+# Version
+cora version
 ```
 
-then `rm -rf node_modules package-lock.json && npm install`. `npm audit` returns clean. Upstream fix tracked at [stellar/js-stellar-sdk#1381](https://github.com/stellar/js-stellar-sdk/pull/1381); this note will be removed as soon as it merges and a new stellar-sdk ships.
-
-## Quick start
+### SDK Usage
 
 ```typescript
-import { createOWSWallet, getOWSBalance, purchaseCardOWS } from '@cora-agent/cora';
+import { purchaseCardOWS } from '@cora-agent/cora';
 
-// 1. Create (or fetch existing) encrypted wallet. Idempotent.
-const { publicKey } = createOWSWallet('my-agent');
-console.log('Fund this Stellar address:', publicKey);
-
-// 2. Pause here until the address has funds. Re-run to check:
-const bal = await getOWSBalance('my-agent');
-console.log(`XLM: ${bal.xlm}  USDC: ${bal.usdc}`);
-
-// 3. Purchase a card — only do this when the user explicitly asks.
 const card = await purchaseCardOWS({
   apiKey: process.env.CORA_API_KEY!,
   walletName: 'my-agent',
-  amountUsdc: '10.00',
-  paymentAsset: 'xlm', // or 'usdc' (trustline added automatically)
+  amountUsdc: '25.00',
+  paymentAsset: 'xlm', // or 'usdc'
 });
 
 console.log(card.number, card.cvv, card.expiry);
 ```
 
-`purchaseCardOWS` handles the whole flow:
+## CLI Commands
 
-1. `POST /v1/orders` with the amount
-2. Sign + submit the Soroban payment from your OWS wallet
-3. Subscribe to the SSE stream at `/v1/orders/:id/stream`
-4. Return the card details as soon as the `ready` event arrives
+| Command | Description |
+|---------|-------------|
+| `cora onboard --claim <code>` | Trade claim code for API key + create wallet |
+| `cora purchase --amount <USD>` | Buy a card using onboarded wallet |
+| `cora wallet address` | Print Stellar address |
+| `cora wallet balance` | Print XLM + USDC balances from Horizon |
+| `cora wallet trustline` | Open USDC trustline (required for USDC) |
+| `cora connector` | Register claude.ai MCP connector |
+| `cora mcp` | Start MCP server over stdio |
+| `cora version` | Print SDK version |
+| `cora --help` | Show help |
 
-No polling loops, no webhook endpoint required.
+## MCP Server
 
-## Funding your wallet
-
-Stellar accounts need a minimum balance to be activated on-chain:
-
-- **Pay with XLM:** send ≥ 1 XLM to cover the base reserve, plus whatever XLM the card costs at the current spot rate (shown in `payment.xlm.amount` when you create an order).
-- **Pay with USDC:** send ≥ 2 XLM (1 base reserve + 1 for the USDC trustline entry), plus the USDC card amount. The SDK will add the trustline automatically the first time you purchase with USDC, so you just need the ≥ 2 XLM on-chain before calling `purchaseCardOWS`.
-
-## Step-by-step API (for more control)
-
-```typescript
-import { CoraClient } from '@cora-agent/cora';
-
-const client = new CoraClient({
-  apiKey: process.env.CORA_API_KEY!,
-  // baseUrl defaults to http://127.0.0.1:4200/v1
-});
-
-// Create the order
-const order = await client.createOrder({ amount_usdc: '10.00' });
-console.log(`Pay ${order.payment.xlm.amount} XLM to contract ${order.payment.contract_id}`);
-
-// ... submit the Soroban transaction yourself, or use the payViaContract helpers ...
-
-// Wait for delivery (uses SSE under the hood, with polling fallback)
-const card = await client.waitForCard(order.order_id, { timeoutMs: 120000 });
-console.log(card.number, card.cvv, card.expiry);
-```
-
-## MCP server — for Claude Desktop, Cursor, and other MCP clients
-
-Add to your client's `mcpServers` config:
+Add to your MCP client config:
 
 ```json
 {
@@ -105,45 +99,57 @@ Add to your client's `mcpServers` config:
 }
 ```
 
-The MCP server exposes four tools: `setup_wallet`, `check_budget`, `check_order`, and `purchase_vcc`.
+**Exposed Tools:** `setup_wallet`, `check_budget`, `check_order`, `purchase_vcc`
 
-## Error handling
+## Project Structure
 
-All SDK errors inherit from `CoraError`. Typed subclasses let you react to specific failure modes:
+```
+src/
+├── cli.ts          # CLI dispatcher and help
+├── client.ts       # CoraClient API wrapper
+├── config.ts       # ~/.cora/config.json management
+├── errors.ts       # Typed error classes (CoraError, SpendLimitError, etc.)
+├── index.ts        # Public exports
+├── mcp.ts          # MCP server entry point
+├── mpp.ts          # Micropayment protocol helpers
+├── ows.ts          # OWS wallet integration (create, sign, pay)
+├── soroban.ts      # Soroban contract interaction
+├── stellar.ts      # Stellar/Horizon helpers
+├── version-check.ts# npm update checker
+└── commands/       # CLI subcommand handlers
+    ├── connector.ts    # `cora connector`
+    ├── onboard.ts      # `cora onboard`
+    ├── purchase.ts     # `cora purchase`
+    └── wallet.ts       # `cora wallet`
+```
+
+## Error Handling
 
 ```typescript
 import {
   CoraError,
   AuthError,
   SpendLimitError,
-  RateLimitError,
-  ServiceUnavailableError,
-  InvalidAmountError,
   OrderFailedError,
   WaitTimeoutError,
 } from '@cora-agent/cora';
 
 try {
-  const card = await purchaseCardOWS({ ... });
+  const card = await purchaseCardOWS({ /* ... */ });
 } catch (err) {
-  if (err instanceof SpendLimitError) { /* cap reached — ask owner to raise */ }
-  else if (err instanceof OrderFailedError) { /* check err.refund for refund tx */ }
-  else if (err instanceof WaitTimeoutError) { /* network flake or stalled fulfillment */ }
-  else if (err instanceof AuthError) { /* bad key */ }
+  if (err instanceof SpendLimitError) { /* budget cap reached */ }
+  else if (err instanceof OrderFailedError) { /* check err.refund */ }
+  else if (err instanceof WaitTimeoutError) { /* fulfillment stalled */ }
+  else if (err instanceof AuthError) { /* invalid API key */ }
 }
 ```
 
-## Keeping card details safe
-
-`purchaseCardOWS` returns the card PAN, CVV, and expiry as plain strings. **Treat them as secrets.** Don't log them, don't write them to disk, don't send them to observability pipelines unless those pipelines are explicitly PCI-compliant.
-
 ## Links
 
-- [cora.dev](https://cora.dev) — dashboard and docs
-- [cora.dev/docs](https://cora.dev/docs) — full API reference
-- [cora.dev/skill.md](https://cora.dev/skill.md) — drop-in agent onboarding brief
-- [cora.dev/llms.txt](https://cora.dev/llms.txt) — LLM-index of every docs surface
-- [github.com/CTX-com/Cora](https://github.com/CTX-com/Cora) — source
+- [cora.dev](https://cora.dev) — Dashboard and docs
+- [cora.dev/docs](https://cora.dev/docs) — Full API reference
+- [cora.dev/skill.md](https://cora.dev/skill.md) — Agent onboarding brief
+- [github.com/oyingrace/cora](https://github.com/oyingrace/cora) — Source
 
 ## License
 
