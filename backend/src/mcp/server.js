@@ -137,6 +137,47 @@ function buildMcpRouter() {
   const router = Router();
   router.use(mcpLimiter);
 
+  // Helper to get public base URL
+  function getPublicBaseUrl(req) {
+    return process.env.CORA_BASE_URL || `${req.protocol}://${req.get('host')}`;
+  }
+
+  // ── RFC 8414: OAuth 2.0 Authorization Server Metadata ─────────────────────────
+  // Global endpoint — MCP clients discover OAuth config from here
+  router.get('/.well-known/oauth-authorization-server', (_req, res) => {
+    const baseUrl = process.env.CORA_BASE_URL || 'http://localhost:4200';
+    res.json({
+      issuer: baseUrl,
+      authorization_endpoint: `${baseUrl}/oauth/authorize`,
+      token_endpoint: `${baseUrl}/oauth/token`,
+      registration_endpoint: `${baseUrl}/dashboard/oauth/clients`,
+      response_types_supported: ['code'],
+      grant_types_supported: ['authorization_code'],
+      code_challenge_methods_supported: ['S256'],
+      scopes_supported: ['mcp:tools'],
+      token_endpoint_auth_methods_supported: ['client_secret_post'],
+    });
+  });
+
+  // RFC 8414: Catch-all for path-based discovery (slug compatibility)
+  router.get('/.well-known/oauth-authorization-server/*path', (req, res) => {
+    // cora doesn't use slugs, redirect to global metadata
+    res.redirect('/.well-known/oauth-authorization-server');
+  });
+
+  // ── RFC 9470: OAuth 2.0 Protected Resource Metadata ───────────────────────────
+  // Global endpoint — tells clients where to find authorization servers
+  router.get('/.well-known/oauth-protected-resource', (req, res) => {
+    const baseUrl = getPublicBaseUrl(req);
+    const mcpUrl = `${baseUrl}/mcp`;
+    res.json({
+      resource: mcpUrl,
+      authorization_servers: [baseUrl],
+      scopes_supported: ['mcp:tools'],
+      bearer_methods_supported: ['header'],
+    });
+  });
+
   // POST /mcp — authenticate then handle one stateless MCP request.
   // Accepts two auth mechanisms, tried in order:
   //   1. Authorization: Bearer <oauth_token>  — from claude.ai OAuth connector
@@ -155,6 +196,9 @@ function buildMcpRouter() {
         apiKey = resolveOAuthToken(rawToken);
         if (!apiKey) {
           bizEvent('mcp.oauth_auth_failed', { ip: req.ip });
+          const baseUrl = getPublicBaseUrl(req);
+          const resourceMetadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
+          res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${resourceMetadataUrl}"`);
           return res.status(401).json({ error: 'invalid_token',
             error_description: 'OAuth token is invalid, expired, or revoked' });
         }
@@ -167,6 +211,9 @@ function buildMcpRouter() {
       apiKey = await authenticateKey(rawKey);
       if (!apiKey) {
         bizEvent('mcp.auth_failed', { ip: req.ip });
+        const baseUrl = getPublicBaseUrl(req);
+        const resourceMetadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
+        res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${resourceMetadataUrl}"`);
         return res.status(401).json({ error: 'invalid_api_key' });
       }
     }

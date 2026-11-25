@@ -327,3 +327,189 @@ describe('OAuth — dashboard client management', () => {
     assert.equal(db.prepare(`SELECT COUNT(*) AS n FROM oauth_clients WHERE id = ?`).get(id).n, 0);
   });
 });
+
+// ── POST /dashboard/oauth/authorize ──────────────────────────────────────────
+// The browser-based handshake. claude.ai opens the backend's /oauth/authorize,
+// which can only authenticate a Bearer header — so it forwards the browser to
+// the dashboard, which owns the session cookie and posts here through
+// /api/admin-proxy (cookie → Bearer, server side).
+
+describe('OAuth — POST /dashboard/oauth/authorize (browser handshake)', () => {
+  beforeEach(resetDb);
+
+  async function dashboardWithAgent(email = 'browser@cora.test') {
+    const { token, userId } = createTestSession({ email });
+    const dashboardId = uuidv4();
+    db.prepare(`INSERT INTO dashboards (id, user_id, name) VALUES (?, ?, ?)`).run(
+      dashboardId,
+      userId,
+      'Browser',
+    );
+    const { id: agentId } = await createTestKey({ label: 'browser-agent' });
+    db.prepare(`UPDATE api_keys SET dashboard_id = ? WHERE id = ?`).run(dashboardId, agentId);
+    return { auth: `Bearer ${token}`, dashboardId, agentId };
+  }
+
+  it('issues a single-use code and returns the client redirect URL', async () => {
+    const { auth, agentId } = await dashboardWithAgent();
+    const c = seedOAuthClient();
+    const res = await request
+      .post('/dashboard/oauth/authorize')
+      .set('Authorization', auth)
+      .send({
+        client_id: c.client_id,
+        redirect_uri: REDIRECT_URI,
+        state: 'st-42',
+        api_key_id: agentId,
+      });
+
+    assert.equal(res.status, 200);
+    const redirect = new URL(res.body.redirect_url);
+    assert.equal(`${redirect.origin}${redirect.pathname}`, REDIRECT_URI);
+    assert.equal(redirect.searchParams.get('state'), 'st-42');
+
+    const code = redirect.searchParams.get('code');
+    assert.ok(code && code.startsWith('coauth_'));
+    const row = db
+      .prepare(`SELECT api_key_id, used_at FROM oauth_codes WHERE code_hash = ?`)
+      .get(sha256(code));
+    assert.equal(row.api_key_id, agentId);
+    assert.equal(row.used_at, null);
+  });
+
+  it('rejects a redirect_uri that does not match the registered client', async () => {
+    const { auth, agentId } = await dashboardWithAgent('mismatch@cora.test');
+    const c = seedOAuthClient();
+    const res = await request
+      .post('/dashboard/oauth/authorize')
+      .set('Authorization', auth)
+      .send({
+        client_id: c.client_id,
+        redirect_uri: 'https://evil.example/cb',
+        state: 's',
+        api_key_id: agentId,
+      });
+
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'invalid_request');
+  });
+
+
+  it('refuses an agent that belongs to another dashboard', async () => {
+    const owner = await dashboardWithAgent('owner1@cora.test');
+    const other = await dashboardWithAgent('owner2@cora.test');
+    const c = seedOAuthClient();
+    const res = await request
+      .post('/dashboard/oauth/authorize')
+      .set('Authorization', owner.auth)
+      .send({
+        client_id: c.client_id,
+        redirect_uri: REDIRECT_URI,
+        state: 's',
+        api_key_id: other.agentId,
+      });
+
+    assert.equal(res.status, 403);
+    assert.equal(res.body.error, 'access_denied');
+  });
+
+  it('requires a dashboard session', async () => {
+    const { agentId } = await dashboardWithAgent('anon@cora.test');
+    const c = seedOAuthClient();
+    const res = await request.post('/dashboard/oauth/authorize').send({
+      client_id: c.client_id,
+      redirect_uri: REDIRECT_URI,
+      state: 's',
+      api_key_id: agentId,
+    });
+
+    assert.equal(res.status, 401);
+  });
+
+  it('503 when OAUTH_ENABLED=false', async () => {
+    const { auth, agentId } = await dashboardWithAgent('disabled@cora.test');
+    const c = seedOAuthClient();
+    const orig = process.env.OAUTH_ENABLED;
+    process.env.OAUTH_ENABLED = 'false';
+    try {
+      const res = await request
+        .post('/dashboard/oauth/authorize')
+        .set('Authorization', auth)
+        .send({
+          client_id: c.client_id,
+          redirect_uri: REDIRECT_URI,
+          state: 's',
+          api_key_id: agentId,
+        });
+      assert.equal(res.status, 503);
+    } finally {
+      process.env.OAUTH_ENABLED = orig;
+    }
+  });
+});
+
+
+// ── Form-encoded bodies (RFC 6749 §4.1.3) ────────────────────────────────────
+// claude.ai posts authorization_code to /oauth/token as
+// application/x-www-form-urlencoded. app.js used to register only
+// express.json(), so req.body was {} and every exchange failed with
+// unsupported_grant_type — "authorization failed" in claude.ai.
+
+describe('OAuth — form-encoded bodies', () => {
+  beforeEach(resetDb);
+
+  it('authorize + token exchange work with application/x-www-form-urlencoded', async () => {
+    const { token, agentId } = await seedUserWithAgent('form@cora.test');
+    const c = seedOAuthClient();
+
+    const authRes = await request
+      .post('/oauth/authorize')
+      .set('Authorization', `Bearer ${token}`)
+      .type('form')
+      .send({
+        client_id: c.client_id,
+        redirect_uri: REDIRECT_URI,
+        state: 'st-form',
+        api_key_id: agentId,
+      });
+
+    assert.equal(authRes.status, 302);
+    const location = new URL(authRes.headers.location);
+    const code = location.searchParams.get('code');
+    assert.ok(code, 'authorize must redirect with a code');
+    assert.equal(location.searchParams.get('state'), 'st-form');
+
+    const tokRes = await request
+      .post('/oauth/token')
+      .type('form')
+      .send({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: REDIRECT_URI,
+        client_id: c.client_id,
+        client_secret: c.client_secret,
+      });
+
+    assert.equal(tokRes.status, 200);
+    assert.ok(tokRes.body.access_token?.startsWith('cora_mcp_'));
+    assert.equal(tokRes.body.token_type, 'Bearer');
+  });
+
+  it('rejects a wrong client_secret with invalid_client (body still parsed)', async () => {
+    const c = seedOAuthClient();
+    const res = await request
+      .post('/oauth/token')
+      .type('form')
+      .send({
+        grant_type: 'authorization_code',
+        code: 'coauth_unknown',
+        redirect_uri: REDIRECT_URI,
+        client_id: c.client_id,
+        client_secret: 'wrong-secret',
+      });
+
+    assert.equal(res.status, 401);
+    assert.equal(res.body.error, 'invalid_client');
+  });
+});
+

@@ -228,6 +228,22 @@ app.use(
   }),
 );
 
+// OAuth 2.0 token requests are form-encoded (RFC 6749 §4.1.3) and so are the
+// backend's own authorize pages (`<form method="POST">`). Without this parser
+// those bodies arrive as `{}`, so `grant_type` is undefined and every
+// claude.ai code→token exchange failed with `unsupported_grant_type`.
+// `extended: false` keeps parsing to flat key/value pairs — no nested objects
+// and no prototype-pollution surface.
+app.use(
+  express.urlencoded({
+    extended: false,
+    limit: '64kb',
+    verify: (/** @type {any} */ req, _res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  }),
+);
+
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,

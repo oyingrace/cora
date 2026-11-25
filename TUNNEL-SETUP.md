@@ -1,5 +1,24 @@
 # Cloudflare Tunnel Setup for Cora
 
+## The origin must be plain HTTP on 3200 / 4200
+
+```bash
+cloudflared tunnel --url http://localhost:4200   # backend  — NOT https, NOT port 42
+cloudflared tunnel --url http://localhost:3200   # dashboard
+```
+
+cloudflared terminates TLS itself and proxies to the origin over local HTTP.
+Pointing it at `https://localhost:4200` fails the TLS handshake, and pointing it
+at the wrong port fails with:
+
+```
+Unable to reach the origin service ... dial tcp [::1]:42: connect: connection refused
+originService=https://localhost:42
+```
+
+That error is **not** a network/firewall problem — the origin URL in the
+cloudflared command (or in your connector settings) is wrong or stale.
+
 ## Current Tunnel URLs
 
 - **Backend API**: Run `cloudflared tunnel --url http://localhost:4200`
@@ -27,7 +46,26 @@ CORA_BASE_URL=https://your-backend-tunnel.trycloudflare.com
 CORA_DASHBOARD_URL=https://your-dashboard-tunnel.trycloudflare.com
 ```
 
-Then restart the backend: `cd backend && node src/index.js`
+Then restart the backend — env is read at boot, so an edit alone changes nothing
+(`npm run dev` uses `--env-file=.env`; `npm start` relies on `dotenv.config()`).
+
+## Connector (claude.ai) — how the OAuth handshake runs
+
+1. claude.ai opens `https://<backend-tunnel>/oauth/authorize?...` in a browser.
+2. That route can only authenticate an `Authorization: Bearer` header, which a
+   browser navigation cannot send — so it renders a sign-in page whose
+   "continue" link points at
+   `https://<dashboard-tunnel>/dashboard/oauth/authorize?...`
+   (built from `CORA_DASHBOARD_URL`).
+3. The dashboard has the session cookie, so it renders the agent picker and
+   mints the code through `POST /dashboard/oauth/authorize` (proxied server-side
+   by `/api/admin-proxy`, cookie → Bearer).
+4. The browser is redirected back to claude.ai with `?code&state`, and claude.ai
+   exchanges it at `POST /oauth/token`.
+
+Requirements: both tunnels running, `MCP_ENABLED=true`, `OAUTH_ENABLED=true`, and
+the connector URL registered in claude.ai must be the **current** backend tunnel
+hostname. After restarting cloudflared you must re-point the connector.
 
 ## About Those "Unauthorized" Errors
 

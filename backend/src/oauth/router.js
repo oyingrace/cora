@@ -123,11 +123,22 @@ function showSignInPage(req, res) {
   const { client_id, redirect_uri, state, response_type } = req.query;
   const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   
-  // Build the return URL to continue OAuth flow after sign-in
-  const returnUrl = `/oauth/authorize?${new URLSearchParams(req.query).toString()}`;
-  // Use CORA_DASHBOARD_URL if set, otherwise fall back to CORA_BASE_URL or localhost
-  const dashboardUrl = process.env.CORA_DASHBOARD_URL || process.env.CORA_BASE_URL || `http://localhost:${process.env.PORT || 4200}`;
+  // The dashboard origin the browser must be sent to. CORA_DASHBOARD_URL is the
+  // public dashboard URL (tunnel or localhost:3200); the backend URL is NOT a
+  // valid fallback here because it serves JSON APIs, not dashboard pages.
+  const dashboardUrl =
+    process.env.CORA_DASHBOARD_URL || `http://localhost:${process.env.DASHBOARD_PORT || 3200}`;
+
+  // Hand the browser off to the dashboard, which owns the session cookie and
+  // can therefore finish the authorize step. Pointing this at a relative
+  // /oauth/authorize URL (the previous behaviour) re-rendered this same page
+  // forever: the browser sends cookies on a link click, never a Bearer header.
+  const returnUrl = `${dashboardUrl.replace(/\/$/, '')}/dashboard/oauth/authorize?${new URLSearchParams(req.query).toString()}`;
   
+  // 401 is the contract for this page: the caller is not authenticated yet and
+  // the HTML body is the actionable sign-in instructions. (Pre-fix this sent
+  // 200, so an unauthenticated GET /oauth/authorize looked like a success.)
+  res.status(401);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -158,7 +169,7 @@ a{color:#0066cc;text-decoration:none}a:hover{text-decoration:underline}
 }
 
 router.get('/authorize', authorizeLimiter, requireAuthOrSignInPage, (req, res) => {
-  const { client_id, redirect_uri, state, response_type } = req.query;
+  const { client_id, redirect_uri, state, response_type, code_challenge, code_challenge_method } = req.query;
 
   if (response_type !== 'code')
     return res.status(400).json({ error: 'unsupported_response_type' });
@@ -168,6 +179,15 @@ router.get('/authorize', authorizeLimiter, requireAuthOrSignInPage, (req, res) =
     return res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uri required' });
   if (!state || typeof state !== 'string')
     return res.status(400).json({ error: 'invalid_request', error_description: 'state required' });
+  // PKCE validation (RFC 7636)
+  if (code_challenge !== undefined) {
+    if (typeof code_challenge !== 'string' || code_challenge.length < 43 || code_challenge.length > 128) {
+      return res.status(400).json({ error: 'invalid_request', error_description: 'code_challenge length must be 43-128 characters' });
+    }
+    if (code_challenge_method !== undefined && code_challenge_method !== 'S256') {
+      return res.status(400).json({ error: 'invalid_request', error_description: 'code_challenge_method must be S256' });
+    }
+  }
 
   const client = findClient(client_id);
   if (!client) return res.status(400).json({ error: 'invalid_client' });
@@ -194,6 +214,12 @@ router.get('/authorize', authorizeLimiter, requireAuthOrSignInPage, (req, res) =
                                   : '<small style="color:#888">○ no wallet</small>'}
           </span></label>`).join('');
 
+  // Pass PKCE params through to the form
+  const pkceFields = (code_challenge
+    ? `<input type="hidden" name="code_challenge" value="${esc(code_challenge)}">\n` +
+      `<input type="hidden" name="code_challenge_method" value="${esc(code_challenge_method || 'S256')}">`
+    : '');
+
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -213,6 +239,7 @@ font-size:1rem;cursor:pointer;margin-top:16px}button:hover{background:#333}
   <input type="hidden" name="client_id"    value="${esc(client_id)}">
   <input type="hidden" name="redirect_uri" value="${esc(redirect_uri)}">
   <input type="hidden" name="state"        value="${esc(state)}">
+  ${pkceFields}
   <div class="card"><strong>Select an agent</strong>${agentOptions}</div>
   ${agents.length > 0 ? '<button type="submit">Authorize</button>' : ''}
 </form>
@@ -223,7 +250,7 @@ font-size:1rem;cursor:pointer;margin-top:16px}button:hover{background:#333}
 // ── POST /oauth/authorize ─────────────────────────────────────────────────────
 
 router.post('/authorize', authorizeLimiter, requireAuth, (req, res) => {
-  const { client_id, redirect_uri, state, api_key_id } = req.body || {};
+  const { client_id, redirect_uri, state, api_key_id, code_challenge, code_challenge_method } = req.body || {};
   const user = /** @type {any} */ (req).user;
 
   if (!client_id || !redirect_uri || !state || !api_key_id)
@@ -242,12 +269,18 @@ router.post('/authorize', authorizeLimiter, requireAuth, (req, res) => {
   );
   if (!agent) return res.status(403).json({ error: 'access_denied' });
 
+  // PKCE: store code_challenge and code_challenge_method if provided (RFC 7636)
+  const pkceChallenge = code_challenge && typeof code_challenge === 'string' ? code_challenge : null;
+  const pkceMethod = pkceChallenge && code_challenge_method && typeof code_challenge_method === 'string'
+    ? code_challenge_method
+    : null;
+
   const rawCode = generateToken('coauth_');
   const expires = new Date(Date.now() + CODE_TTL_MINUTES * 60_000).toISOString();
   db.prepare(
-    `INSERT INTO oauth_codes (id, client_id, user_id, api_key_id, code_hash, redirect_uri, state, expires_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(uuidv4(), client_id, user.id, api_key_id, sha256(rawCode), redirect_uri, state, expires);
+    `INSERT INTO oauth_codes (id, client_id, user_id, api_key_id, code_hash, redirect_uri, state, expires_at, code_challenge, code_challenge_method)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(uuidv4(), client_id, user.id, api_key_id, sha256(rawCode), redirect_uri, state, expires, pkceChallenge, pkceMethod);
 
   bizEvent('oauth.code_issued', { client_id, user_id: user.id, api_key_id });
 
@@ -261,7 +294,7 @@ router.post('/authorize', authorizeLimiter, requireAuth, (req, res) => {
 
 router.post('/token', tokenLimiter, (req, res) => {
   const body = req.body || {};
-  const { grant_type, code, redirect_uri, client_id, client_secret } = body;
+  const { grant_type, code, redirect_uri, client_id, client_secret, code_verifier } = body;
 
   if (grant_type !== 'authorization_code')
     return res.status(400).json({ error: 'unsupported_grant_type' });
@@ -281,11 +314,33 @@ router.post('/token', tokenLimiter, (req, res) => {
       ).get(sha256(code), client_id)
     );
     if (!row || row.redirect_uri !== redirect_uri) return null;
+
+    // PKCE verification (RFC 7636)
+    if (row.code_challenge) {
+      if (!code_verifier || typeof code_verifier !== 'string') {
+        return { error: 'invalid_grant', error_description: 'code_verifier required for PKCE' };
+      }
+      if (row.code_challenge_method === 'S256') {
+        // code_challenge = BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))
+        const expectedChallenge = crypto
+          .createHash('sha256')
+          .update(code_verifier)
+          .digest('base64url'); // base64url encoding (no padding, -_ instead of +/)
+        if (expectedChallenge !== row.code_challenge) {
+          return { error: 'invalid_grant', error_description: 'PKCE verification failed' };
+        }
+      } else {
+        // Unsupported code_challenge_method
+        return { error: 'invalid_grant', error_description: 'Unsupported code_challenge_method' };
+      }
+    }
+
     db.prepare(`UPDATE oauth_codes SET used_at = datetime('now') WHERE id = ?`).run(row.id);
     return row;
   })();
 
   if (!result) return res.status(400).json({ error: 'invalid_grant' });
+  if (result.error) return res.status(400).json(result);
 
   const rawToken = generateToken('cora_mcp_');
   const expires = new Date(Date.now() + TOKEN_TTL_HOURS * 3_600_000).toISOString();

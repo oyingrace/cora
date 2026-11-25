@@ -1531,6 +1531,85 @@ router.delete('/oauth/clients/:id', requirePermission('agent:update'), (req, res
   res.json({ ok: true });
 });
 
+// POST /dashboard/oauth/authorize — issue an authorization code from the
+// dashboard origin.
+//
+// The public GET/POST /oauth/authorize endpoints authenticate with an
+// `Authorization: Bearer` header. A browser navigation cannot send that header,
+// so when claude.ai opens the authorize URL the user lands on the backend's
+// sign-in page and loops forever: clicking "continue" is a plain GET carrying
+// only cookies, which the backend never accepted.
+//
+// The dashboard owns the session cookie, so it finishes the handshake here.
+// The UI calls this through /api/admin-proxy (cookie → Bearer, server side) and
+// the browser is redirected to claude.ai with the code.
+router.post('/oauth/authorize', requirePermission('agent:update'), (req, res) => {
+  if ((process.env.OAUTH_ENABLED || 'false') !== 'true') {
+    return res.status(503).json({
+      error: 'oauth_disabled',
+      message: 'Set OAUTH_ENABLED=true in the backend environment to authorize connectors.',
+    });
+  }
+
+  const clientId = shortString(req.body?.client_id, 120);
+  const state = shortString(req.body?.state, 512);
+  const apiKeyId = shortString(req.body?.api_key_id, 64);
+  const redirectUri = req.body?.redirect_uri;
+
+  if (!clientId || !state || !apiKeyId || typeof redirectUri !== 'string' || !redirectUri) {
+    return res.status(400).json({
+      error: 'invalid_request',
+      message: 'client_id, redirect_uri, state and api_key_id are required.',
+    });
+  }
+
+  const client = /** @type {any} */ (
+    db.prepare(`SELECT id, name, redirect_uri FROM oauth_clients WHERE client_id = ?`).get(clientId)
+  );
+  if (!client) return res.status(400).json({ error: 'invalid_client' });
+  // RFC 6749 §4.1.3 — redirect_uri is compared with strict equality.
+  if (client.redirect_uri !== redirectUri) {
+    return res.status(400).json({ error: 'invalid_request', message: 'redirect_uri mismatch' });
+  }
+
+  // Tenancy: the agent must belong to the caller's dashboard and be enabled.
+  const agent = /** @type {any} */ (
+    db
+      .prepare(`SELECT id, label FROM api_keys WHERE id = ? AND dashboard_id = ? AND enabled = 1`)
+      .get(apiKeyId, req.dashboard.id)
+  );
+  if (!agent) {
+    return res
+      .status(403)
+      .json({ error: 'access_denied', message: 'That agent is not on this dashboard.' });
+  }
+
+  const rawCode = `coauth_${crypto.randomBytes(32).toString('hex')}`;
+  const codeHash = crypto.createHash('sha256').update(rawCode).digest('hex');
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  db.prepare(
+    `INSERT INTO oauth_codes (id, client_id, user_id, api_key_id, code_hash, redirect_uri, state, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(uuidv4(), clientId, req.user.id, apiKeyId, codeHash, redirectUri, state, expiresAt);
+
+  recordAuditFromReq(req, 'oauth.code_issued', {
+    resourceType: 'oauth_client',
+    resourceId: client.id,
+    details: { client_id: clientId, api_key_id: apiKeyId },
+  });
+  bizEvent('dashboard.oauth_code_issued', {
+    dashboard_id: req.dashboard.id,
+    client_id: clientId,
+    api_key_id: apiKeyId,
+  });
+
+  const url = new URL(redirectUri);
+  url.searchParams.set('code', rawCode);
+  url.searchParams.set('state', state);
+  res.json({ redirect_url: url.toString() });
+});
+
 // Attach internal helpers to the router so unit tests can exercise
 // them in isolation. Express routers are functions, so attaching
 // named properties is a standard, app.use-compatible pattern.

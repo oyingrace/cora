@@ -26,7 +26,12 @@ export function AuthGate() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      if (!res.ok) throw new Error('failed to send code');
+      // Surface the backend's message (rate limit, email_failed, invalid_email)
+      // instead of collapsing every failure into "failed to send code".
+      const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Could not send the code. Try again.');
+      }
       setStage('code');
     } catch (err) {
       setError((err as Error).message || 'failed');
@@ -44,7 +49,10 @@ export function AuthGate() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code }),
       });
-      if (!res.ok) throw new Error('invalid code');
+      const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Invalid or expired code.');
+      }
       window.location.reload();
     } catch (err) {
       setError((err as Error).message || 'failed');
