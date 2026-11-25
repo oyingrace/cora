@@ -472,6 +472,7 @@ router.post('/authorize', authorizeLimiter, requireAuth, (req, res) => {
 
 router.post('/token', tokenLimiter, (req, res) => {
   const body = req.body || {};
+  console.log('[TOKEN DEBUG] body:', JSON.stringify(body));
   const { grant_type, code, redirect_uri, client_id, client_secret, code_verifier } = body;
 
   if (grant_type !== 'authorization_code')
@@ -484,6 +485,7 @@ router.post('/token', tokenLimiter, (req, res) => {
 
   // Atomically mark the code used so two concurrent requests can't both succeed.
   const result = db.transaction(() => {
+    console.log('[TOKEN DEBUG] Looking up code with hash:', sha256(code), 'client_id:', client_id);
     const row = /** @type {any} */ (
       db.prepare(
         `SELECT * FROM oauth_codes
@@ -491,10 +493,15 @@ router.post('/token', tokenLimiter, (req, res) => {
            AND datetime(expires_at) > datetime('now')`,
       ).get(sha256(code), client_id)
     );
-    if (!row || row.redirect_uri !== redirect_uri) return null;
+    console.log('[TOKEN DEBUG] Found row:', row ? 'yes' : 'no');
+    if (!row) return null;
+    console.log('[TOKEN DEBUG] row.redirect_uri:', row.redirect_uri, 'requested:', redirect_uri);
+    if (row.redirect_uri !== redirect_uri) return null;
 
     // PKCE verification (RFC 7636)
     if (row.code_challenge) {
+      console.log('[TOKEN DEBUG] PKCE required, row.code_challenge:', row.code_challenge);
+      console.log('[TOKEN DEBUG] code_verifier provided:', !!code_verifier);
       if (!code_verifier || typeof code_verifier !== 'string') {
         return { error: 'invalid_grant', error_description: 'code_verifier required for PKCE' };
       }
@@ -504,6 +511,8 @@ router.post('/token', tokenLimiter, (req, res) => {
           .createHash('sha256')
           .update(code_verifier)
           .digest('base64url'); // base64url encoding (no padding, -_ instead of +/)
+        console.log('[TOKEN DEBUG] expectedChallenge:', expectedChallenge);
+        console.log('[TOKEN DEBUG] row.code_challenge:', row.code_challenge);
         if (expectedChallenge !== row.code_challenge) {
           return { error: 'invalid_grant', error_description: 'PKCE verification failed' };
         }
