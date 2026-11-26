@@ -10,13 +10,19 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview",
+    "deploy:vinext": "vinext-cloudflare deploy"
   },
   "dependencies": {
+    "@vinext/cloudflare": "^1.4.0",
     "geist": "^1.7.0",
     "next": "^16.2.6",
-    "react": "19.2.5",
-    "react-dom": "19.2.5"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-server-dom-webpack": "^19.3.1"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.2.2",
@@ -24,15 +30,22 @@
     "lightningcss-linux-x64-gnu": "^1.32.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^2.0.0-rc.5",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "4.2.4",
     "@types/node": "20.19.39",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitejs/plugin-rsc": "^0.5.39",
+    "cf": "^1.0.0-rc.6",
     "eslint": "9.39.4",
     "eslint-config-next": "^16.2.6",
     "tailwindcss": "4.2.4",
     "typescript": "6.0.3",
+    "vinext": "^1.4.6",
+    "vite": "^8.3.0",
     "vitest": "^4.1.5"
-  }
+  },
+  "type": "module"
 }
