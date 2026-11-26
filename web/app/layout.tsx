@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { MarketingChrome } from '@/app/components/MarketingChrome';
 import './globals.css';
 
-const SITE_URL = 'https://cora.dev';
+const SITE_URL = 'https://agent-cora.fs.kg';
 const SITE_NAME = 'Cora';
 const SITE_DESCRIPTION =
   'The financial operating system for AI agents. Wallets, spend controls, and virtual Visa cards on Stellar — autonomy without giving up control.';
@@ -61,7 +61,7 @@ const jsonLdOrg = {
   '@id': `${SITE_URL}#organization`,
   name: SITE_NAME,
   url: SITE_URL,
-  logo: `${SITE_URL}/icon.png`,
+  logo: `${SITE_URL}/logo.svg`,
   description: SITE_DESCRIPTION,
 };
 

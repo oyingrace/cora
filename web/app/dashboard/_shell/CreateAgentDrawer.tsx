@@ -103,8 +103,8 @@ export function CreateAgentDrawer({ open, onClose }: Props) {
   // without knowing why.
   const snippet = created?.claim
     ? [
-        'Read https://cora.dev/skill.md and set up this agent by running:',
-        sdkNpx(`onboard --claim ${created.claim.code} --api-base http://127.0.0.1:4200/v1`),
+        'Read https:/cora.tokenspool.workers.dev/skill.md and set up this agent by running:',
+        sdkNpx(`onboard --claim ${created.claim.code} --api-base https://cora-backend.fly.dev/v1`),
         '',
         'Then purchase on testnet:',
         sdkNpx('purchase --amount 5 --network testnet'),
