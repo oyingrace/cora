@@ -1,10 +1,11 @@
 name = "cora"
 compatibility_date = "2026-11-25"
-main = "dist/server/index.js"
+main = "dist/server/ssr/index.js"
 
 [assets]
 directory = "dist/client"
 binding = "ASSETS"
+run_worker_first = ["/*", "!/_next/static/*"]
 
 [vars]
 CORA_BACKEND_URL = "https://cora-backend.fly.dev"

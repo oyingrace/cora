@@ -138,7 +138,7 @@ export default function DeveloperPage() {
           <Snippet title="Install" code={`npm install ${SDK_PACKAGE.name}`} />
           <Snippet
             title="Onboard an agent"
-            code={sdkNpx('onboard --claim <claim-code> --api-base http://127.0.0.1:4200/v1')}
+            code={sdkNpx('onboard --claim <claim-code> --api-base https://cora-backend.fly.dev/v1')}
           />
           <Snippet
             title="Purchase from the CLI"

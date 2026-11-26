@@ -17,8 +17,7 @@ Default network during development: **Stellar testnet**.
 
 ## Quick path
 
-1. Operator creates an agent + claim code in the dashboard
-2. Agent runs `npx @cora-agent/cora onboard --claim cora_<code> --network testnet --api-base http://127.0.0.1:4200/v1`
+1. Operator creates an agent + claim code in the dashboard https://cora-backend.fly.dev/v1`
 3. Agent purchases with `npx @cora-agent/cora purchase --amount 25 --network testnet`
 
 ## Docs

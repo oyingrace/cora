@@ -10,7 +10,7 @@ Cora gives AI agents wallets, spend controls, and virtual Visa cards on Stellar.
 2. Run:
 
 ```bash
-npx -y @cora-agent/cora@latest onboard --claim cora_<code> --api-base http://127.0.0.1:4200/v1
+npx -y @cora-agent/cora@latest onboard --claim cora_<code> --api-base https://cora-backend.fly.dev
 ```
 
 3. Fund the printed Stellar address with **testnet** XLM (and USDC if paying with USDC).
@@ -25,10 +25,3 @@ npx @cora-agent/cora wallet trustline --network testnet
 ```bash
 npx @cora-agent/cora purchase --amount 25 --network testnet
 ```
-
-## Notes
-
-- API keys look like `cora_<hex>`.
-- Local API: `http://127.0.0.1:4200/v1`
-- MCP is not enabled in this build (`npx @cora-agent/cora mcp` exits until Phase 10).
-- Prefer `phase` on order polls: `ready` means the card is available.

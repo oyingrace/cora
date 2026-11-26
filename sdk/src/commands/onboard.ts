@@ -82,7 +82,7 @@ Options:
                              passphrase value is read from process.env at call
                              time; only the variable NAME is persisted to
                              ~/.cora/config.json, never the value itself.
-  --api-base <url>           Override the default http://127.0.0.1:4200/v1
+  --api-base <url>           Override the default https://cora-backend.fly.dev/v1
   -h, --help                 Show this message
 `);
 }
@@ -141,7 +141,7 @@ export async function onboardCommand(argv: string[]): Promise<number> {
     return 2;
   }
 
-  let apiBase = args.apiBase || process.env.CORA_BASE_URL || 'http://127.0.0.1:4200/v1';
+  let apiBase = args.apiBase || process.env.CORA_BASE_URL || 'https://cora-backend.fly.dev/v1';
   // Refuse a non-HTTPS base URL unless it targets loopback (localhost)
   // or the explicit CORA_ALLOW_INSECURE_BASE_URL escape hatch is set.
   // Without this, an attacker who tricks the user into passing

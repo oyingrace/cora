@@ -36,7 +36,7 @@ Options:
                              env, else testnet.
 
 Standard onboarding flow:
-  1. cora onboard --claim <code> --api-base http://127.0.0.1:4200/v1
+  1. cora onboard --claim <code> --api-base https://cora-backend.fly.dev/v1
   2. Operator sends at least 2 testnet XLM to the wallet's Stellar address
   3. cora wallet trustline --network testnet
   4. Operator sends USDC (testnet) if paying with USDC

@@ -195,7 +195,7 @@ export class CoraClient {
     // explicitly (the common case for MCP, CLI purchase, and OWS callers).
     // An http:// or ftp:// URL would be used as-is, sending the agent's
     // API key over plaintext. Now every code path is covered.
-    const finalBase = resolvedBase || 'http://127.0.0.1:4200/v1';
+    const finalBase = resolvedBase || 'https://cora-backend.fly.dev/v1';
     try {
       // Lazy-require to avoid circular deps in the browser-bundle path
       // where config.ts isn't available. If assertSafeBaseUrl isn't
