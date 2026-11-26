@@ -132,6 +132,10 @@ app.set('trust proxy', 1);
 // local CLI tools can hit dev-only endpoints like /auth/dev-token without HTTPS.
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
+    // Allow internal load-balancer / Fly.io health checks on /status over plain HTTP
+    // (they connect from the host bridge IP without X-Forwarded-Proto: https).
+    if (req.path === '/status') return next();
+
     // Check if request is from loopback
     const socketAddr = req.socket?.remoteAddress || '';
     const isLoopback = socketAddr === '127.0.0.1' || socketAddr === '::1' || socketAddr === '::ffff:127.0.0.1';

@@ -1,0 +1,13 @@
+node_modules
+.git
+.next
+dist
+web
+mock-vcc-worker
+contract/target
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+

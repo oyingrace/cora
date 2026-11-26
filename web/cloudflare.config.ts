@@ -12,6 +12,11 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
+      CORA_BACKEND_URL: "https://cora-backend.fly.dev",
+      NEXT_PUBLIC_API_BASE: "https://agent-cora.fs.kg",
+      NEXT_PUBLIC_DASHBOARD_URL: "https://dashboard.agent-cora.fs.kg",
+      NEXT_PUBLIC_NETWORK: "testnet",
+      NEXT_PUBLIC_MOCK_VCC: "true",
     },
   }),
 });
