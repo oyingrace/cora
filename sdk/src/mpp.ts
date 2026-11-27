@@ -15,7 +15,7 @@ import { payViaContractOWS, type PayViaContractOwsDeps } from './ows';
 
 export interface MppChargeOpts {
   /**
-   * The full MPP resource URL. E.g. 'http://127.0.0.1:4200/v1/cards/visa/10.00'.
+   * The full MPP resource URL. E.g. 'https://cora-backend.fly.dev/v1/cards/visa/10.00'.
    * This is the standards-compliant mode — works against any MPP server.
    */
   url?: string;
