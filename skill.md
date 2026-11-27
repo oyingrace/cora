@@ -25,3 +25,4 @@ npx @cora-agent/cora wallet trustline --network testnet
 ```bash
 npx @cora-agent/cora purchase --amount 25 --network testnet
 ```
+
