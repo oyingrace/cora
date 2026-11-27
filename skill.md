@@ -2,7 +2,7 @@
 
 Cora gives AI agents wallets, spend controls, and virtual Visa cards on Stellar.
 
-**Network:** testnet by default.
+**Network:** stellar testnet by default.
 
 ## Setup
 
